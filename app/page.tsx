@@ -465,7 +465,7 @@ export default function Home() {
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
                           if (aiInput.trim()) {
-                            handleSubmit(e as any);
+                            handleSubmit(e as React.KeyboardEvent);
                           }
                         }
                       }}
