@@ -6,6 +6,7 @@ import { TransactionTable } from "@/components/transaction-table";
 import { StatsPanel } from "@/components/stats-panel";
 import { useChat } from "@ai-sdk/react";
 import ReactMarkdown from "react-markdown";
+import Image from "next/image";
 
 interface Message {
   id: string;
@@ -24,7 +25,6 @@ export default function Home() {
       timestamp: new Date(),
     },
   ]);
-  const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [program, setProgram] = useState<WebGLProgram | null>(null);
   const [time, setTime] = useState(0);
@@ -301,8 +301,6 @@ export default function Home() {
     canvas.height = window.innerHeight;
     gl.viewport(0, 0, canvas.width, canvas.height);
 
-    //gl.useProgram(program) // Remove this line
-
     gl.uniform1f(timeLocation, time);
     gl.uniform2f(mouseLocation, mouseX, mouseY);
     gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
@@ -395,9 +393,11 @@ export default function Home() {
                 >
                   {message.sender === "bot" && (
                     <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center mr-2 overflow-hidden">
-                      <img
+                      <Image
                         src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-tYmOJmh3dJRJCALKRzftQghOKKJRT8.png"
                         alt="Story MCP"
+                        width={20}
+                        height={20}
                         className="w-5 h-5"
                       />
                     </div>
@@ -465,7 +465,7 @@ export default function Home() {
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
                           if (aiInput.trim()) {
-                            handleSubmit(e as any);
+                            handleSubmit(e as React.FormEvent);
                           }
                         }
                       }}

@@ -4,17 +4,14 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Prerequisites
 
-1. Install UV (Python Package Manager):
+1. Clone the Story MCP Hub repository:
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-2. Clone the Story MCP Hub repository:
-```bash
-# Navigate to the parent directory of mcp_playground
+# Navigate to the parent directory of ai-playground-frontend
 cd ..
 git clone https://github.com/piplabs/story-mcp-hub.git
 ```
+
+2. Make sure the backend server is running. See the [ai-playground-backend](../ai-playground-backend) repository for setup instructions.
 
 ## Environment Setup
 
@@ -26,26 +23,12 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 2. Install dependencies:
 ```bash
-# Install Python dependencies
-cd mcp_playground
-uv venv
-uv pip install -r requirements.txt
-
-# Install Node.js dependencies
 npm install
 ```
 
 ## Running the Application
 
-You'll need to run both the backend and frontend servers:
-
-1. Start the backend server:
-```bash
-python -m api.index
-```
-The backend will run on http://localhost:8000
-
-2. In a new terminal, start the frontend development server:
+Start the frontend development server:
 ```bash
 npm run dev
 ```
@@ -63,13 +46,12 @@ This project uses:
 
 ## Project Structure
 ```
-mcp_playground/
-├── api/              # Backend API endpoints
+ai-playground-frontend/
 ├── app/              # Next.js frontend pages
 ├── components/       # React components
-├── lib/             # Shared utilities
-├── public/          # Static assets
-└── utils/           # Helper functions
+├── lib/              # Shared utilities
+├── public/           # Static assets
+└── utils/            # Helper functions
 ```
 
 ## Learn More
@@ -89,7 +71,6 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Troubleshooting
 
-- If you encounter any issues with UV, make sure it's properly installed and in your PATH
-- Ensure both the Story MCP Hub and mcp_playground repositories are in the same parent directory
+- Ensure the backend server is running on http://localhost:8000
 - Verify that all environment variables are properly set
-- Check that both backend and frontend servers are running on their respective ports
+- Make sure the Story MCP Hub repository is in the same parent directory

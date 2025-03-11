@@ -61,6 +61,26 @@ interface Transaction {
   };
 }
 
+// Define an interface for the API response item
+interface TransactionApiItem {
+  hash?: string;
+  transaction_types?: string[] | string;
+  status?: string;
+  timestamp?: string;
+  method?: string;
+  value?: string;
+  exchange_rate?: string;
+  from?: { hash: string };
+  to?: { hash: string; name?: string };
+  decoded_input?: {
+    parameters?: Array<{
+      name: string;
+      type: string;
+      value: string;
+    }>;
+  };
+}
+
 export function TransactionTable() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,13 +111,13 @@ export function TransactionTable() {
         throw new Error("Invalid API response format");
       }
 
-      const formattedTransactions = data.items.map((item: any) => ({
+      const formattedTransactions = data.items.map((item: TransactionApiItem) => ({
         hash: item.hash || "",
         type: Array.isArray(item.transaction_types)
           ? item.transaction_types[0]
           : item.transaction_types || "contract_call",
         status: item.status || "pending",
-        timestamp: new Date(item.timestamp).toLocaleTimeString([], {
+        timestamp: new Date(item.timestamp || Date.now()).toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
@@ -192,10 +212,7 @@ export function TransactionTable() {
                 </tr>
               ) : (
                 transactions.slice(0, 6).map((tx, index) => {
-                  // Get the actual recipient address and amount from decoded input
-                  const recipientAddress =
-                    tx.decoded_input?.parameters?.find((p) => p.name === "to")
-                      ?.value || "";
+                  // Get the amount from decoded input
                   const amount =
                     tx.decoded_input?.parameters?.find(
                       (p) => p.name === "value"
