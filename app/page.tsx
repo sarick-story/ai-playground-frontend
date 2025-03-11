@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { useEffect, useRef, useState } from "react"
-import { ArrowRight } from "lucide-react"
-import { TransactionTable } from "@/components/transaction-table"
-import { StatsPanel } from "@/components/stats-panel"
-import { useChat } from "@ai-sdk/react"
-import ReactMarkdown from "react-markdown"
+import { useEffect, useRef, useState } from "react";
+import { ArrowRight } from "lucide-react";
+import { TransactionTable } from "@/components/transaction-table";
+import { StatsPanel } from "@/components/stats-panel";
+import { useChat } from "@ai-sdk/react";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
-  id: string
-  content: string
-  sender: "user" | "bot"
-  timestamp: Date
+  id: string;
+  content: string;
+  sender: "user" | "bot";
+  timestamp: Date;
 }
 
 export default function Home() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -23,22 +23,32 @@ export default function Home() {
       sender: "bot",
       timestamp: new Date(),
     },
-  ])
-  const [input, setInput] = useState("")
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const [program, setProgram] = useState<WebGLProgram | null>(null)
-  const [time, setTime] = useState(0)
-  const [mouseX, setMouseX] = useState(0.5)
-  const [mouseY, setMouseY] = useState(0.5)
-  const [gl, setGl] = useState<WebGLRenderingContext | null>(null)
-  const [timeLocation, setTimeLocation] = useState<WebGLUniformLocation | null>(null)
-  const [mouseLocation, setMouseLocation] = useState<WebGLUniformLocation | null>(null)
-  const [resolutionLocation, setResolutionLocation] = useState<WebGLUniformLocation | null>(null)
-  
+  ]);
+  const [input, setInput] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [program, setProgram] = useState<WebGLProgram | null>(null);
+  const [time, setTime] = useState(0);
+  const [mouseX, setMouseX] = useState(0.5);
+  const [mouseY, setMouseY] = useState(0.5);
+  const [gl, setGl] = useState<WebGLRenderingContext | null>(null);
+  const [timeLocation, setTimeLocation] = useState<WebGLUniformLocation | null>(
+    null
+  );
+  const [mouseLocation, setMouseLocation] =
+    useState<WebGLUniformLocation | null>(null);
+  const [resolutionLocation, setResolutionLocation] =
+    useState<WebGLUniformLocation | null>(null);
+
   // Use Vercel AI SDK for chat
-  const { messages: aiMessages, input: aiInput, handleInputChange, handleSubmit, isLoading } = useChat({
+  const {
+    messages: aiMessages,
+    input: aiInput,
+    handleInputChange,
+    handleSubmit,
+    isLoading,
+  } = useChat({
     api: "/api/chat",
-    streamProtocol: 'text',
+    streamProtocol: "text",
     onFinish: (message) => {
       console.log("Chat finished:", message);
     },
@@ -51,8 +61,8 @@ export default function Home() {
     },
     onError: (error) => {
       console.error("Chat error:", error);
-    }
-  })
+    },
+  });
 
   // Add debugging for aiMessages
   useEffect(() => {
@@ -68,7 +78,7 @@ export default function Home() {
         sender: (msg.role === "user" ? "user" : "bot") as "user" | "bot",
         timestamp: new Date(),
       }));
-      
+
       // Always include the welcome message at the beginning
       const welcomeMessage: Message = {
         id: "welcome",
@@ -76,13 +86,13 @@ export default function Home() {
         sender: "bot",
         timestamp: new Date(),
       };
-      
+
       // Check if there's already a welcome message in the mapped messages
-      const hasWelcomeInNew = newMessages.some(msg => msg.id === "welcome");
-      
+      const hasWelcomeInNew = newMessages.some((msg) => msg.id === "welcome");
+
       if (!hasWelcomeInNew) {
         // Add the welcome message at the beginning if it's not already there
-        setMessages([welcomeMessage, ...newMessages as Message[]]);
+        setMessages([welcomeMessage, ...(newMessages as Message[])]);
       } else {
         setMessages(newMessages as Message[]);
       }
@@ -90,16 +100,16 @@ export default function Home() {
   }, [aiMessages]);
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-    const newGl = canvas.getContext("webgl")
-    if (!newGl) return
+    const newGl = canvas.getContext("webgl");
+    if (!newGl) return;
 
-    setGl(newGl)
+    setGl(newGl);
 
-    const vertexShader = newGl.createShader(newGl.VERTEX_SHADER)
-    if (!vertexShader) return
+    const vertexShader = newGl.createShader(newGl.VERTEX_SHADER);
+    if (!vertexShader) return;
 
     newGl.shaderSource(
       vertexShader,
@@ -110,12 +120,12 @@ export default function Home() {
         v_uv = position.xy * 0.5 + 0.5;
         gl_Position = position;
       }
-    `,
-    )
-    newGl.compileShader(vertexShader)
+    `
+    );
+    newGl.compileShader(vertexShader);
 
-    const fragmentShader = newGl.createShader(newGl.FRAGMENT_SHADER)
-    if (!fragmentShader) return
+    const fragmentShader = newGl.createShader(newGl.FRAGMENT_SHADER);
+    if (!fragmentShader) return;
 
     newGl.shaderSource(
       fragmentShader,
@@ -188,130 +198,168 @@ export default function Home() {
           
           gl_FragColor = vec4(finalColor, 1.0);
       }
-    `,
-    )
-    newGl.compileShader(fragmentShader)
+    `
+    );
+    newGl.compileShader(fragmentShader);
 
-    const newProgram = newGl.createProgram()
-    if (!newProgram) return
+    const newProgram = newGl.createProgram();
+    if (!newProgram) return;
 
-    newGl.attachShader(newProgram, vertexShader)
-    newGl.attachShader(newProgram, fragmentShader)
-    newGl.linkProgram(newProgram)
-    setProgram(newProgram)
+    newGl.attachShader(newProgram, vertexShader);
+    newGl.attachShader(newProgram, fragmentShader);
+    newGl.linkProgram(newProgram);
+    setProgram(newProgram);
 
-    const positionBuffer = newGl.createBuffer()
-    newGl.bindBuffer(newGl.ARRAY_BUFFER, positionBuffer)
-    newGl.bufferData(newGl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), newGl.STATIC_DRAW)
+    const positionBuffer = newGl.createBuffer();
+    newGl.bindBuffer(newGl.ARRAY_BUFFER, positionBuffer);
+    newGl.bufferData(
+      newGl.ARRAY_BUFFER,
+      new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]),
+      newGl.STATIC_DRAW
+    );
 
-    const positionLocation = newGl.getAttribLocation(newProgram, "position")
-    newGl.enableVertexAttribArray(positionLocation)
-    newGl.vertexAttribPointer(positionLocation, 2, newGl.FLOAT, false, 0, 0)
+    const positionLocation = newGl.getAttribLocation(newProgram, "position");
+    newGl.enableVertexAttribArray(positionLocation);
+    newGl.vertexAttribPointer(positionLocation, 2, newGl.FLOAT, false, 0, 0);
 
-    const newTimeLocation = newGl.getUniformLocation(newProgram, "u_time")
-    const newMouseLocation = newGl.getUniformLocation(newProgram, "u_mouse")
-    const newResolutionLocation = newGl.getUniformLocation(newProgram, "u_resolution")
+    const newTimeLocation = newGl.getUniformLocation(newProgram, "u_time");
+    const newMouseLocation = newGl.getUniformLocation(newProgram, "u_mouse");
+    const newResolutionLocation = newGl.getUniformLocation(
+      newProgram,
+      "u_resolution"
+    );
 
-    setTimeLocation(newTimeLocation)
-    setMouseLocation(newMouseLocation)
-    setResolutionLocation(newResolutionLocation)
+    setTimeLocation(newTimeLocation);
+    setMouseLocation(newMouseLocation);
+    setResolutionLocation(newResolutionLocation);
 
     const handleMouseMove = (e: MouseEvent) => {
-      setMouseX(e.clientX / window.innerWidth)
-      setMouseY(1.0 - e.clientY / window.innerHeight)
-    }
+      setMouseX(e.clientX / window.innerWidth);
+      setMouseY(1.0 - e.clientY / window.innerHeight);
+    };
 
-    window.addEventListener("mousemove", handleMouseMove)
+    window.addEventListener("mousemove", handleMouseMove);
 
-    const startTime = Date.now()
+    const startTime = Date.now();
 
-    let animationFrameId: number
+    let animationFrameId: number;
 
     const render = () => {
-      if (!newGl || !canvas || !newProgram || !newTimeLocation || !newMouseLocation || !newResolutionLocation) return
+      if (
+        !newGl ||
+        !canvas ||
+        !newProgram ||
+        !newTimeLocation ||
+        !newMouseLocation ||
+        !newResolutionLocation
+      )
+        return;
 
-      newGl.viewport(0, 0, canvas.width, canvas.height)
+      newGl.viewport(0, 0, canvas.width, canvas.height);
 
-      const currentTime = (Date.now() - startTime) / 1000
-      setTime(currentTime)
+      const currentTime = (Date.now() - startTime) / 1000;
+      setTime(currentTime);
 
-      newGl.uniform1f(newTimeLocation, currentTime)
-      newGl.uniform2f(newMouseLocation, mouseX, mouseY)
-      newGl.uniform2f(newResolutionLocation, canvas.width, canvas.height)
+      newGl.uniform1f(newTimeLocation, currentTime);
+      newGl.uniform2f(newMouseLocation, mouseX, mouseY);
+      newGl.uniform2f(newResolutionLocation, canvas.width, canvas.height);
 
-      newGl.drawArrays(newGl.TRIANGLE_STRIP, 0, 4)
-      animationFrameId = requestAnimationFrame(render)
-    }
+      newGl.drawArrays(newGl.TRIANGLE_STRIP, 0, 4);
+      animationFrameId = requestAnimationFrame(render);
+    };
 
-    newGl.useProgram(newProgram)
+    newGl.useProgram(newProgram);
 
     const animate = () => {
-      render()
-    }
+      render();
+    };
 
-    animate()
+    animate();
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove)
-      cancelAnimationFrame(animationFrameId)
+      window.removeEventListener("mousemove", handleMouseMove);
+      cancelAnimationFrame(animationFrameId);
       if (gl && program) {
-        gl.deleteProgram(program)
+        gl.deleteProgram(program);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   useEffect(() => {
-    if (!gl || !program || !timeLocation || !mouseLocation || !resolutionLocation) return
+    if (
+      !gl ||
+      !program ||
+      !timeLocation ||
+      !mouseLocation ||
+      !resolutionLocation
+    )
+      return;
 
-    if (!canvasRef.current) return
-    const canvas = canvasRef.current
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
-    gl.viewport(0, 0, canvas.width, canvas.height)
+    if (!canvasRef.current) return;
+    const canvas = canvasRef.current;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    gl.viewport(0, 0, canvas.width, canvas.height);
 
     //gl.useProgram(program) // Remove this line
 
-    gl.uniform1f(timeLocation, time)
-    gl.uniform2f(mouseLocation, mouseX, mouseY)
-    gl.uniform2f(resolutionLocation, canvas.width, canvas.height)
-  }, [time, mouseX, mouseY, program, gl, timeLocation, mouseLocation, resolutionLocation])
+    gl.uniform1f(timeLocation, time);
+    gl.uniform2f(mouseLocation, mouseX, mouseY);
+    gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+  }, [
+    time,
+    mouseX,
+    mouseY,
+    program,
+    gl,
+    timeLocation,
+    mouseLocation,
+    resolutionLocation,
+  ]);
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" })
+      messagesEndRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
     }
-  }
+  };
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    scrollToBottom();
+  }, [messages]);
 
   // Add this after the existing useEffect for scrollToBottom
   useEffect(() => {
     // Save the current scroll position
-    const scrollPosition = window.scrollY
+    const scrollPosition = window.scrollY;
 
     // After the component updates and scrolls to bottom
     return () => {
       // Restore the page scroll position
-      window.scrollTo(0, scrollPosition)
-    }
-  }, [messages])
+      window.scrollTo(0, scrollPosition);
+    };
+  }, [messages]);
 
   // Replace the handleSendMessage function with one that uses the AI SDK
   const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!aiInput.trim()) return
-    
-    handleSubmit(e)
-  }
+    e.preventDefault();
+    if (!aiInput.trim()) return;
+
+    handleSubmit(e);
+  };
 
   return (
     <>
       <canvas ref={canvasRef} className="fixed inset-0 -z-10" />
       <main className="min-h-screen pb-32 pt-20 overflow-x-hidden">
         <div className="flex justify-center mb-12">
-          <svg className="h-16 w-auto text-white" viewBox="0 0 398.4 91.4" fill="currentColor">
+          <svg
+            className="h-16 w-auto text-white"
+            viewBox="0 0 398.4 91.4"
+            fill="currentColor"
+          >
             <path d="M352.2,89.7h18.4V52.8l27.7-50.2h-21.2l-24.9,46.5V89.7z" />
             <path d="M357.4,40.9L336.6,2.6h-20.9l20.9,38.3H357.4z" />
             <path d="M286.3,62.6l14.1,27.1h20l-17.6-32c8.1-5.6,12.9-14.6,12.9-24.9c0-16.8-10.5-30.1-33.1-30.1h-36.2v87.1h19.1V62.8 L286.3,62.6z M265.5,18.7h17.2c9.3,0,14.8,4.9,14.8,13.8c0,9-4.9,13.3-14.2,13.3h-17.8V18.7z" />
@@ -327,7 +375,7 @@ export default function Home() {
             <TransactionTable />
           </div>
 
-          <div className="w-full lg:w-[600px] bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50">
+          <div className="w-full max-h-[776px] flex flex-col lg:w-[600px] bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50">
             <div className="flex items-center justify-center p-4 border-b border-gray-800">
               <h2 className="text-xl font-['Acronym',_var(--font-ibm-plex-mono),_sans-serif] text-white">
                 MCP Agent Playground
@@ -339,7 +387,12 @@ export default function Home() {
               style={{ overscrollBehavior: "contain" }}
             >
               {messages.map((message) => (
-                <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
+                <div
+                  key={message.id}
+                  className={`flex ${
+                    message.sender === "user" ? "justify-end" : "justify-start"
+                  }`}
+                >
                   {message.sender === "bot" && (
                     <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center mr-2 overflow-hidden">
                       <img
@@ -359,10 +412,18 @@ export default function Home() {
                   >
                     <ReactMarkdown
                       components={{
-                        p: ({ children }) => <p className="break-words">{children}</p>,
+                        p: ({ children }) => (
+                          <p className="break-words">{children}</p>
+                        ),
                         // Add other elements you want to style
-                        pre: ({ children }) => <pre className="break-words whitespace-pre-wrap">{children}</pre>,
-                        code: ({ children }) => <code className="break-words">{children}</code>
+                        pre: ({ children }) => (
+                          <pre className="break-words whitespace-pre-wrap">
+                            {children}
+                          </pre>
+                        ),
+                        code: ({ children }) => (
+                          <code className="break-words">{children}</code>
+                        ),
                       }}
                     >
                       {message.content}
@@ -386,42 +447,44 @@ export default function Home() {
             </div>
 
             <div className="p-4 border-t border-gray-800/50 bg-black/80">
-              <form
-                onSubmit={handleSendMessage}
-                className="flex gap-2"
-              >
+              <form onSubmit={handleSendMessage} className="flex gap-2">
                 <div className="flex-1 relative">
-                  <textarea
-                    value={aiInput}
-                    onChange={(e) => {
-                      handleInputChange(e);
-                      // Auto-adjust height
-                      e.target.style.height = 'inherit';
-                      e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`; // Max height of 200px
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        if (aiInput.trim()) {
-                          handleSubmit(e as any);
+                  <div className="relative w-full px-4 py-3 bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-3xl text-white focus-within:ring-2 focus-within:ring-purple-500 focus-within:border-purple-500">
+                    <textarea
+                      value={aiInput}
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        // Auto-adjust height
+                        e.target.style.height = "inherit";
+                        e.target.style.height = `${Math.min(
+                          e.target.scrollHeight,
+                          200
+                        )}px`; // Max height of 200px
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          if (aiInput.trim()) {
+                            handleSubmit(e as any);
+                          }
                         }
-                      }
-                    }}
-                    placeholder="Ask about Story blockchain..."
-                    rows={1}
-                    className="w-full px-4 py-3 bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 resize-none overflow-hidden min-h-[48px] max-h-[200px]"
-                    style={{
-                      lineHeight: '1.5',
-                    }}
-                  />
+                      }}
+                      placeholder="Ask about Story blockchain..."
+                      rows={1}
+                      className="w-full bg-transparent text-white focus:ring-0 focus:outline-none scrollbar-thin scrollbar-track-gray-900 scrollbar-thumb-gray-800 placeholder-gray-500 resize-none overflow-y-auto min-h-[48px] max-h-[200px]"
+                      style={{
+                        lineHeight: "1.5",
+                      }}
+                    />
+                    <button
+                      type="submit"
+                      disabled={isLoading || !aiInput.trim()}
+                      className="size-8 ml-auto aspect-square flex-shrink-0 flex items-center justify-center rounded-full bg-gradient-to-r from-purple-500/90 to-pink-500/90 text-white backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <ArrowRight className="h-5 w-5" />
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="submit"
-                  disabled={isLoading || !aiInput.trim()}
-                  className="px-4 py-3 aspect-square flex-shrink-0 flex items-center justify-center rounded-full bg-gradient-to-r from-purple-500/90 to-pink-500/90 text-white backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ArrowRight className="h-5 w-5" />
-                </button>
               </form>
             </div>
           </div>
@@ -447,6 +510,5 @@ export default function Home() {
         </footer>
       </main>
     </>
-  )
+  );
 }
-
