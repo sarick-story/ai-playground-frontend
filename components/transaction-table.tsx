@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { RefreshCw, ArrowUpRight } from "lucide-react";
 import { CopyIconButton } from "./copy-button";
 
@@ -193,9 +193,7 @@ export function TransactionTable() {
               ) : (
                 transactions.slice(0, 6).map((tx, index) => {
                   // Get the actual recipient address and amount from decoded input
-                  const recipientAddress =
-                    tx.decoded_input?.parameters?.find((p) => p.name === "to")
-                      ?.value || "";
+                  // const recipientAddress = tx.decoded_input?.parameters?.find((p) => p.name === "to")?.value || "";
                   const amount =
                     tx.decoded_input?.parameters?.find(
                       (p) => p.name === "value"

@@ -1,3 +1,4 @@
+import React from "react";
 import { ComponentPropsWithoutRef, useState } from "react";
 import copy from "copy-to-clipboard";
 import { Check, Files } from "lucide-react";

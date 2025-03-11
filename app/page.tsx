@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { TransactionTable } from "@/components/transaction-table";
 import { StatsPanel } from "@/components/stats-panel";
@@ -465,7 +465,7 @@ export default function Home() {
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
                           if (aiInput.trim()) {
-                            handleSubmit(e as any);
+                            handleSubmit(e as React.KeyboardEvent);
                           }
                         }
                       }}
