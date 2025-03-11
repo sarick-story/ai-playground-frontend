@@ -4,6 +4,8 @@ import React from "react"
 import { useState, useRef, useEffect } from "react"
 import { Send } from "lucide-react"
 import { format } from "date-fns"
+import { v4 as uuidv4 } from "uuid"
+import { getClientConversationId, resetConversation } from '@/utils/conversation'
 
 interface Message {
   id: string
@@ -23,6 +25,11 @@ export function ChatUI() {
   ])
   const [input, setInput] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [conversationId, setConversationId] = useState<string>("")
+
+  useEffect(() => {
+    setConversationId(getClientConversationId())
+  }, [])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -46,12 +53,18 @@ export function ChatUI() {
     setInput("")
 
     try {
-      const response = await fetch(`${process.env.STORYSCAN_API_ENDPOINT}/chat`, {
-        method: "POST",
+      const response = await fetch('/api/chat', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({
+          messages: messages.map(msg => ({
+            role: msg.sender === 'user' ? 'user' : 'assistant',
+            content: msg.content
+          })),
+          conversation_id: conversationId
+        }),
       }).catch(() => {
         return new Response(
           JSON.stringify({
@@ -82,6 +95,11 @@ export function ChatUI() {
 
       setMessages((prev) => [...prev, botMessage])
     }
+  }
+
+  const handleNewConversation = () => {
+    setConversationId(resetConversation())
+    setMessages([])
   }
 
   return (
