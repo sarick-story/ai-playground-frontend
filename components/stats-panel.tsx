@@ -122,7 +122,9 @@ export function StatsPanel() {
               <Clock className="w-4 h-4 text-cyan-500" />
               <span className="text-sm text-gray-400">Block Time</span>
             </div>
-            <p className="mt-2 text-xl font-bold text-white">{(stats?.average_block_time / 1000).toFixed(1)}s</p>
+            <p className="mt-2 text-xl font-bold text-white">
+              {stats?.average_block_time ? (stats.average_block_time / 1000).toFixed(1) : '0'}s
+            </p>
           </div>
 
           {/* Total Blocks */}
