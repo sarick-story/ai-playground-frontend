@@ -1,9 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { RefreshCw, Activity, Box, Users, Clock, Database, Zap } from "lucide-react"
 import { formatNumber } from "@/utils/format-number"
-import Image from "next/image"
 
 interface NetworkStats {
   average_block_time: number
@@ -66,13 +65,7 @@ export function StatsPanel() {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             {stats?.coin_image && (
-              <Image 
-                src={stats.coin_image || "/placeholder.svg"} 
-                alt="Coin" 
-                width={32} 
-                height={32} 
-                className="rounded-full"
-              />
+              <img src={stats.coin_image || "/placeholder.svg"} alt="Coin" className="w-8 h-8 rounded-full" />
             )}
             <div>
               <h3 className="text-xl font-['Acronym',_var(--font-ibm-plex-mono),_sans-serif] text-white">

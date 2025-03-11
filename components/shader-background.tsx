@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import { useRef } from "react"
 import { useFrame } from "@react-three/fiber"
 import { useMouse } from "@/hooks/use-mouse"
@@ -111,6 +112,13 @@ export function ShaderMaterial() {
         u_mouse: { value: { x: 0.5, y: 0.5 } },
         u_resolution: { value: { x: window.innerWidth, y: window.innerHeight } },
       }}
+      data-fragment-shader={fragmentShader}
+      data-vertex-shader={vertexShader}
+      data-uniforms={JSON.stringify({
+        u_time: { value: 0 },
+        u_mouse: { value: { x: 0.5, y: 0.5 } },
+        u_resolution: { value: { x: window.innerWidth, y: window.innerHeight } },
+      })}
     />
   )
 }

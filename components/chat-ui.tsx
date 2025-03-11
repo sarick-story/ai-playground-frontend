@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import { useState, useRef, useEffect } from "react"
 import { Send } from "lucide-react"
 import { format } from "date-fns"
