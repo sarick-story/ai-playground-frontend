@@ -27,6 +27,8 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 2. Install dependencies:
 ```bash
 # Install Python dependencies
+cd mcp_playground
+uv venv
 uv pip install -r requirements.txt
 
 # Install Node.js dependencies

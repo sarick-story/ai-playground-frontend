@@ -41,8 +41,10 @@ async def run_agent(user_message: str, queue: Optional[asyncio.Queue] = None):
         The final response if queue is None
     """
     logger.info(f"Starting run_agent with message: {user_message[:50]}...")
-    
-    server_path = os.path.join(os.path.dirname(__file__), "story-mcp-hub/storyscan-mcp/server.py")
+
+    # Assuming all repos are at the same level in parent directory
+    server_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
+                          "story-mcp-hub/storyscan-mcp/server.py")
     logger.info(f"Server path: {server_path}")
     
     if not os.path.exists(server_path):
