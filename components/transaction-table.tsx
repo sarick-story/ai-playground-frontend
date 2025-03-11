@@ -1,68 +1,75 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { RefreshCw, ArrowUpRight } from "lucide-react"
+import { useEffect, useState } from "react";
+import { RefreshCw, ArrowUpRight } from "lucide-react";
+import { CopyIconButton } from "./copy-button";
 
 function truncateHash(hash: string | undefined, maxLength = 10): string {
-  if (!hash) return ""
-  if (hash.length <= maxLength) return hash
-  return hash.substring(0, maxLength / 2) + "..." + hash.substring(hash.length - maxLength / 2)
+  if (!hash) return "";
+  if (hash.length <= maxLength) return hash;
+  return (
+    hash.substring(0, maxLength / 2) +
+    "..." +
+    hash.substring(hash.length - maxLength / 2)
+  );
 }
 
 // Format token value to human readable format
 function formatTokenValue(value: string): string {
-  const num = Number.parseFloat(value) / 1e18
-  if (isNaN(num)) return "0"
+  const num = Number.parseFloat(value) / 1e18;
+  if (isNaN(num)) return "0";
 
-  if (num === 0) return "0"
+  if (num === 0) return "0";
 
   if (num >= 1000000) {
-    const millions = num / 1000000
-    return `${millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)}M`
+    const millions = num / 1000000;
+    return `${millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)}M`;
   }
 
   if (num >= 1000) {
-    const thousands = num / 1000
-    return `${thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(1)}k`
+    const thousands = num / 1000;
+    return `${
+      thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(1)
+    }k`;
   }
 
-  return num % 1 === 0 ? num.toFixed(0) : num.toFixed(2)
+  return num % 1 === 0 ? num.toFixed(0) : num.toFixed(2);
 }
 
 interface Transaction {
-  hash: string
-  type: string
-  status: string
-  timestamp: string
-  method: string
-  value: string
-  exchange_rate: string
+  hash: string;
+  type: string;
+  status: string;
+  timestamp: string;
+  method: string;
+  value: string;
+  exchange_rate: string;
   from: {
-    hash: string
-  }
+    hash: string;
+  };
   to: {
-    hash: string
-    name?: string
-  }
-  transaction_types: string[]
+    hash: string;
+    name?: string;
+  };
+  transaction_types: string[];
   decoded_input?: {
     parameters?: Array<{
-      name: string
-      type: string
-      value: string
-    }>
-  }
+      name: string;
+      type: string;
+      value: string;
+    }>;
+  };
 }
 
 export function TransactionTable() {
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchTransactions = async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       const response = await fetch(
         "https://www.storyscan.xyz/api/v2/transactions?filter=validated&type=coin_transfer%2Ctoken_transfer&method=transfer",
@@ -70,18 +77,18 @@ export function TransactionTable() {
           headers: {
             accept: "application/json",
           },
-        },
-      )
+        }
+      );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json()
-      console.log("API Response:", data)
+      const data = await response.json();
+      console.log("API Response:", data);
 
       if (!data || !data.items || !Array.isArray(data.items)) {
-        throw new Error("Invalid API response format")
+        throw new Error("Invalid API response format");
       }
 
       const formattedTransactions = data.items.map((item: any) => ({
@@ -103,21 +110,23 @@ export function TransactionTable() {
         to: item.to || { hash: "" },
         transaction_types: item.transaction_types || [],
         decoded_input: item.decoded_input || {},
-      }))
+      }));
 
-      setTransactions(formattedTransactions)
+      setTransactions(formattedTransactions);
     } catch (error) {
-      console.error("Error fetching transactions:", error)
-      setError(error instanceof Error ? error.message : "Failed to fetch transactions")
-      setTransactions([])
+      console.error("Error fetching transactions:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to fetch transactions"
+      );
+      setTransactions([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchTransactions()
-  }, [])
+    fetchTransactions();
+  }, []);
 
   return (
     <div className="bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50 w-full flex flex-col h-[400px]">
@@ -165,37 +174,56 @@ export function TransactionTable() {
                   ))
               ) : error ? (
                 <tr>
-                  <td colSpan={4} className="h-[252px] px-4 text-center text-red-400">
+                  <td
+                    colSpan={4}
+                    className="h-[252px] px-4 text-center text-red-400"
+                  >
                     {error}
                   </td>
                 </tr>
               ) : transactions.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="h-[252px] px-4 text-center text-gray-400">
+                  <td
+                    colSpan={4}
+                    className="h-[252px] px-4 text-center text-gray-400"
+                  >
                     No transactions found
                   </td>
                 </tr>
               ) : (
                 transactions.slice(0, 6).map((tx, index) => {
                   // Get the actual recipient address and amount from decoded input
-                  const recipientAddress = tx.decoded_input?.parameters?.find((p) => p.name === "to")?.value || ""
-                  const amount = tx.decoded_input?.parameters?.find((p) => p.name === "value")?.value || "0"
+                  const recipientAddress =
+                    tx.decoded_input?.parameters?.find((p) => p.name === "to")
+                      ?.value || "";
+                  const amount =
+                    tx.decoded_input?.parameters?.find(
+                      (p) => p.name === "value"
+                    )?.value || "0";
 
                   return (
-                    <tr key={tx.hash || index} className="h-[42px] hover:bg-gray-900/40">
+                    <tr
+                      key={tx.hash || index}
+                      className="h-[42px] hover:bg-gray-900/40"
+                    >
                       <td className="px-4 py-3 text-sm truncate">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-800/60 text-cyan-500">
                           {tx.type.toLowerCase().replace(/_/g, " ")}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm font-mono text-gray-300 truncate">
-                        <div className="flex items-center">
+                        <div className="flex space-x-1 items-center">
                           {truncateHash(tx.hash)}
+
+                          <CopyIconButton
+                            className="ml-1 size-3"
+                            message={tx.hash}
+                          />
                           <a
                             href={`https://www.storyscan.xyz/tx/${tx.hash}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="ml-1 text-gray-400 hover:text-white flex-shrink-0"
+                            className="text-gray-400 hover:text-white flex-shrink-0"
                           >
                             <ArrowUpRight className="h-3 w-3" />
                           </a>
@@ -206,9 +234,11 @@ export function TransactionTable() {
                           {formatTokenValue(amount)} {tx.to.name || ""}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-400">{tx.timestamp}</td>
+                      <td className="px-4 py-3 text-sm text-gray-400">
+                        {tx.timestamp}
+                      </td>
                     </tr>
-                  )
+                  );
                 })
               )}
             </tbody>
@@ -216,6 +246,5 @@ export function TransactionTable() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-
