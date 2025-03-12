@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
     //   : process.env.BACKEND_URL || 'http://localhost:8000'; // Local development
     const backendUrl = "https://apb-tony-fork-136402401870.us-central1.run.app";
     const authHeaders = await authClient?.getRequestHeaders();
+    console.log("Auth Headers", `${JSON.stringify(authHeaders, null, 2)}`);
 
     console.log("Forwarding request to backend:", `${backendUrl}/api/chat`);
 
