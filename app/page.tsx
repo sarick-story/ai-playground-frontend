@@ -7,6 +7,7 @@ import { StatsPanel } from "@/components/stats-panel";
 import { useChat } from "@ai-sdk/react";
 import ReactMarkdown from "react-markdown";
 import { ToolsPanel } from "@/components/tools-panel";
+import { MCPServerSelector, type MCPServer } from "@/components/mcp-server-selector";
 
 interface Message {
   id: string;
@@ -14,6 +15,23 @@ interface Message {
   sender: "user" | "bot";
   timestamp: Date;
 }
+
+// Define available MCP servers
+const MCP_SERVERS: MCPServer[] = [
+  {
+    id: "storyscan",
+    name: "Storyscan MCP",
+    description: "The official Storyscan Model Context Protocol server",
+    available: true,
+  },
+  {
+    id: "sdk",
+    name: "Story SDK MCP",
+    description: "Advanced MCP server with SDK integration capabilities",
+    available: false,
+    comingSoon: true,
+  },
+];
 
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -38,6 +56,7 @@ export default function Home() {
     useState<WebGLUniformLocation | null>(null);
   const [resolutionLocation, setResolutionLocation] =
     useState<WebGLUniformLocation | null>(null);
+  const [selectedMCPServerId, setSelectedMCPServerId] = useState<string>("storyscan");
 
   // Use Vercel AI SDK for chat
   const {
@@ -352,6 +371,13 @@ export default function Home() {
     handleSubmit(e);
   };
 
+  // Handle MCP server selection
+  const handleMCPServerSelect = (serverId: string) => {
+    setSelectedMCPServerId(serverId);
+    // You could add additional logic here to change API endpoints based on the selected server
+    console.log(`MCP Server changed to: ${serverId}`);
+  };
+
   return (
     <>
       <canvas ref={canvasRef} className="fixed inset-0 -z-10" />
@@ -385,8 +411,17 @@ export default function Home() {
               <ToolsPanel />
             </div>
 
+            {/* MCP Server Selector Section */}
+            <div className="p-4 border-b border-gray-800/50 bg-gray-900/30">
+              <MCPServerSelector 
+                servers={MCP_SERVERS} 
+                selectedServerId={selectedMCPServerId} 
+                onServerSelect={handleMCPServerSelect} 
+              />
+            </div>
+
             <div
-              className="h-[600px] overflow-y-auto p-4 space-y-4 bg-transparent"
+              className="h-[550px] overflow-y-auto p-4 space-y-4 bg-transparent"
               style={{ overscrollBehavior: "contain" }}
             >
               {messages.map((message) => (
@@ -494,7 +529,9 @@ export default function Home() {
                           }
                         }
                       }}
-                      placeholder="Ask about Story blockchain..."
+                      placeholder={`Ask about Story blockchain using ${
+                        MCP_SERVERS.find(server => server.id === selectedMCPServerId)?.name || "MCP"
+                      }...`}
                       rows={1}
                       className="w-full bg-transparent text-white focus:ring-0 focus:outline-none scrollbar-thin scrollbar-track-gray-900 scrollbar-thumb-gray-800 placeholder-gray-500 resize-none overflow-y-auto min-h-[48px] max-h-[200px]"
                       style={{
