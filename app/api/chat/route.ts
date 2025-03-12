@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { GoogleAuth } from "google-auth-library";
+import { googleAuth } from "./auth";
 
 // This is a proxy endpoint that forwards requests to the backend
 export async function POST(req: NextRequest) {
@@ -11,7 +11,6 @@ export async function POST(req: NextRequest) {
     const backendUrl = "https://apb-tony-fork-136402401870.us-central1.run.app";
 
     // 1. Create a GoogleAuth client
-    const googleAuth = new GoogleAuth();
 
     // 2. Retrieve an ID token client with the Cloud Run URL as the target audience
     const idTokenClient = await googleAuth.getIdTokenClient(backendUrl);

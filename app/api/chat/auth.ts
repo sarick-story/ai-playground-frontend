@@ -1,6 +1,12 @@
 import { getVercelOidcToken } from "@vercel/functions/oidc";
 import { GoogleAuth, ExternalAccountClient } from "google-auth-library";
 
+const credentials = JSON.parse(
+  Buffer.from(process.env.GOOGLE_KEY_JSON ?? "", "base64").toString()
+);
+
+export const googleAuth = new GoogleAuth({ credentials });
+
 export async function getIdToken(serviceUrl: string) {
   try {
     const auth = new GoogleAuth({
