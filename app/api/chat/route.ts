@@ -9,10 +9,15 @@ export async function POST(req: NextRequest) {
     // Get the request body which should include messages AND conversation_id
     const { messages, conversation_id } = await req.json();
     
-    console.log('Forwarding request to backend:', `${BACKEND_URL}/api/chat`);
+    // Use different URLs for different environments
+    const backendUrl = process.env.VERCEL_ENV === 'production' 
+      ? process.env.BACKEND_URL  // Cloud Run URL in production
+      : process.env.BACKEND_URL || 'http://localhost:8000'; // Local development
+    
+    console.log('Forwarding request to backend:', `${backendUrl}/api/chat`);
     
     // Forward the request to the backend server
-    const response = await fetch(`${BACKEND_URL}/api/chat`, {
+    const response = await fetch(`${backendUrl}/api/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
