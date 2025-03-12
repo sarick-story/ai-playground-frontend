@@ -8,9 +8,13 @@ export async function POST(req: NextRequest) {
     const { messages, conversation_id } = await req.json();
 
     // The URL of your private Cloud Run service
-    const backendUrl = "https://apb-tony-fork-136402401870.us-central1.run.app";
+    // const backendUrl = "https://apb-tony-fork-136402401870.us-central1.run.app";
+    const backendUrl =
+      "https://ai-playground-backend-136402401870.us-central1.run.app";
 
     // 1. Create a GoogleAuth client
+    const projectID = await googleAuth.getProjectId();
+    console.log("Target GCP Project:", projectID);
 
     // 2. Retrieve an ID token client with the Cloud Run URL as the target audience
     const idTokenClient = await googleAuth.getIdTokenClient(backendUrl);
@@ -18,7 +22,6 @@ export async function POST(req: NextRequest) {
     // 3. Get request headers from the ID token client (contains `Authorization: Bearer <ID_TOKEN>`)
     const authHeaders = await idTokenClient.getRequestHeaders();
 
-    console.log("Auth Headers", JSON.stringify(authHeaders, null, 2));
     console.log("Forwarding request to backend:", `${backendUrl}/api/chat`);
 
     // 4. Forward the request to the backend server using the ID token
