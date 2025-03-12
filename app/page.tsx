@@ -1,5 +1,5 @@
 "use client";
-
+import { motion } from "motion/react";
 import React, { useEffect, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { TransactionTable } from "@/components/transaction-table";
@@ -24,7 +24,6 @@ export default function Home() {
       timestamp: new Date(),
     },
   ]);
-  const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [program, setProgram] = useState<WebGLProgram | null>(null);
   const [time, setTime] = useState(0);
@@ -45,7 +44,8 @@ export default function Home() {
     input: aiInput,
     handleInputChange,
     handleSubmit,
-    isLoading,
+    status,
+    // isLoading,
   } = useChat({
     api: "/api/chat",
     streamProtocol: "text",
@@ -63,6 +63,7 @@ export default function Home() {
       console.error("Chat error:", error);
     },
   });
+  const isLoading = status === "submitted";
 
   // Add debugging for aiMessages
   useEffect(() => {
@@ -370,12 +371,12 @@ export default function Home() {
           </svg>
         </div>
         <div className="container mx-auto flex flex-col lg:flex-row gap-8 items-start justify-center">
-          <div className="flex flex-col gap-6 w-full lg:w-[600px]">
+          <div className="flex flex-col gap-6 w-full lg:w-[600px] lg:min-h-[776px] flex-shrink-0">
             <StatsPanel />
             <TransactionTable />
           </div>
 
-          <div className="w-full max-h-[776px] flex flex-col lg:w-[600px] bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50">
+          <div className="w-full flex-shrink-0 max-h-[776px] flex flex-col lg:w-[600px] bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50">
             <div className="flex items-center justify-center p-4 border-b border-gray-800">
               <h2 className="text-xl font-['Acronym',_var(--font-ibm-plex-mono),_sans-serif] text-white">
                 MCP Agent Playground
@@ -443,6 +444,28 @@ export default function Home() {
                   )}
                 </div>
               ))}
+              {isLoading && (
+                <motion.div
+                  className="flex justify-start"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, opacity: { duration: 0.15 } }}
+                >
+                  <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center mr-2 overflow-hidden">
+                    <img
+                      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-tYmOJmh3dJRJCALKRzftQghOKKJRT8.png"
+                      alt="Story MCP"
+                      className="w-5 h-5"
+                    />
+                  </div>
+
+                  <div
+                    className={`rounded-2xl p-3 max-w-[80%] chat-message "bg-gray-800/70 text-gray-100 backdrop-blur-sm`}
+                  >
+                    <LoadingBubble />
+                  </div>
+                </motion.div>
+              )}
               <div ref={messagesEndRef} />
             </div>
 
@@ -512,3 +535,21 @@ export default function Home() {
     </>
   );
 }
+
+const LoadingBubble = () => {
+  return (
+    <div className="flex justify-start">
+      <div className="flex space-x-1 items-center h-4">
+        <div className="typing-dot w-2 h-2 bg-gray-500 rounded-full animate-pulse"></div>
+        <div
+          className="typing-dot w-2 h-2 bg-gray-500 rounded-full animate-pulse"
+          style={{ animationDelay: "0.2s" }}
+        ></div>
+        <div
+          className="typing-dot w-2 h-2 bg-gray-500 rounded-full animate-pulse"
+          style={{ animationDelay: "0.4s" }}
+        ></div>
+      </div>
+    </div>
+  );
+};
