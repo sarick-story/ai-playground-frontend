@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getIdToken } from "./auth";
+import { authClient } from "./auth";
 
 // Get the backend URL from environment variables or use default
 // const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8000';
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     //   ? process.env.BACKEND_URL  // Cloud Run URL in production
     //   : process.env.BACKEND_URL || 'http://localhost:8000'; // Local development
     const backendUrl = "https://apb-tony-fork-136402401870.us-central1.run.app";
-    const idToken = await getIdToken(backendUrl);
+    const authHeaders = await authClient?.getRequestHeaders();
 
     console.log("Forwarding request to backend:", `${backendUrl}/api/chat`);
 
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${idToken}`,
+        ...authHeaders,
       },
       body: JSON.stringify({
         messages,
