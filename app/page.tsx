@@ -1,5 +1,5 @@
 "use client";
-
+import { motion } from "motion/react";
 import React, { useEffect, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { TransactionTable } from "@/components/transaction-table";
@@ -445,7 +445,12 @@ export default function Home() {
                 </div>
               ))}
               {isLoading && (
-                <div className="flex justify-start">
+                <motion.div
+                  className="flex justify-start"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, opacity: { duration: 0.15 } }}
+                >
                   <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center mr-2 overflow-hidden">
                     <img
                       src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-tYmOJmh3dJRJCALKRzftQghOKKJRT8.png"
@@ -459,7 +464,7 @@ export default function Home() {
                   >
                     <LoadingBubble />
                   </div>
-                </div>
+                </motion.div>
               )}
               <div ref={messagesEndRef} />
             </div>
