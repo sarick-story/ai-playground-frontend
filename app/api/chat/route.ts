@@ -13,8 +13,6 @@ export async function POST(req: NextRequest) {
       "https://ai-playground-backend-136402401870.us-central1.run.app";
 
     // 1. Create a GoogleAuth client
-    const projectID = await googleAuth.getProjectId();
-    console.log("Target GCP Project:", projectID);
 
     // 2. Retrieve an ID token client with the Cloud Run URL as the target audience
     const idTokenClient = await googleAuth.getIdTokenClient(backendUrl);
