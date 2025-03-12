@@ -24,7 +24,6 @@ export default function Home() {
       timestamp: new Date(),
     },
   ]);
-  const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [program, setProgram] = useState<WebGLProgram | null>(null);
   const [time, setTime] = useState(0);
@@ -45,7 +44,8 @@ export default function Home() {
     input: aiInput,
     handleInputChange,
     handleSubmit,
-    isLoading,
+    status,
+    // isLoading,
   } = useChat({
     api: "/api/chat",
     streamProtocol: "text",
@@ -63,6 +63,7 @@ export default function Home() {
       console.error("Chat error:", error);
     },
   });
+  const isLoading = status === "submitted";
 
   // Add debugging for aiMessages
   useEffect(() => {
@@ -443,6 +444,23 @@ export default function Home() {
                   )}
                 </div>
               ))}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center mr-2 overflow-hidden">
+                    <img
+                      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-tYmOJmh3dJRJCALKRzftQghOKKJRT8.png"
+                      alt="Story MCP"
+                      className="w-5 h-5"
+                    />
+                  </div>
+
+                  <div
+                    className={`rounded-2xl p-3 max-w-[80%] chat-message "bg-gray-800/70 text-gray-100 backdrop-blur-sm`}
+                  >
+                    <LoadingBubble />
+                  </div>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
 
@@ -512,3 +530,21 @@ export default function Home() {
     </>
   );
 }
+
+const LoadingBubble = () => {
+  return (
+    <div className="flex justify-start">
+      <div className="flex space-x-1 items-center h-4">
+        <div className="typing-dot w-2 h-2 bg-gray-500 rounded-full animate-pulse"></div>
+        <div
+          className="typing-dot w-2 h-2 bg-gray-500 rounded-full animate-pulse"
+          style={{ animationDelay: "0.2s" }}
+        ></div>
+        <div
+          className="typing-dot w-2 h-2 bg-gray-500 rounded-full animate-pulse"
+          style={{ animationDelay: "0.4s" }}
+        ></div>
+      </div>
+    </div>
+  );
+};
