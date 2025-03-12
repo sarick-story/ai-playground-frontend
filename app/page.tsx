@@ -6,6 +6,7 @@ import { TransactionTable } from "@/components/transaction-table";
 import { StatsPanel } from "@/components/stats-panel";
 import { useChat } from "@ai-sdk/react";
 import ReactMarkdown from "react-markdown";
+import { ToolsPanel } from "@/components/tools-panel";
 
 interface Message {
   id: string;
@@ -377,10 +378,11 @@ export default function Home() {
           </div>
 
           <div className="w-full flex-shrink-0 max-h-[776px] flex flex-col lg:w-[600px] bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50">
-            <div className="flex items-center justify-center p-4 border-b border-gray-800">
+            <div className="flex items-center justify-between p-4 border-b border-gray-800">
               <h2 className="text-xl font-['Acronym',_var(--font-ibm-plex-mono),_sans-serif] text-white">
                 MCP Agent Playground
               </h2>
+              <ToolsPanel />
             </div>
 
             <div
