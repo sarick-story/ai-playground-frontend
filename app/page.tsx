@@ -370,12 +370,12 @@ export default function Home() {
           </svg>
         </div>
         <div className="container mx-auto flex flex-col lg:flex-row gap-8 items-start justify-center">
-          <div className="flex flex-col gap-6 w-full lg:w-[600px]">
+          <div className="flex flex-col gap-6 w-full lg:w-[600px] lg:min-h-[776px] flex-shrink-0">
             <StatsPanel />
             <TransactionTable />
           </div>
 
-          <div className="w-full max-h-[776px] flex flex-col lg:w-[600px] bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50">
+          <div className="w-full flex-shrink-0 max-h-[776px] flex flex-col lg:w-[600px] bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50">
             <div className="flex items-center justify-center p-4 border-b border-gray-800">
               <h2 className="text-xl font-['Acronym',_var(--font-ibm-plex-mono),_sans-serif] text-white">
                 MCP Agent Playground
