@@ -9,7 +9,7 @@ interface Tool {
   id: string
   name: string
   description: string
-  icon: React.ElementType
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
 }
 
 const tools: Tool[] = [
