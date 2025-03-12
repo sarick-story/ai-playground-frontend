@@ -381,8 +381,8 @@ export default function Home() {
   return (
     <>
       <canvas ref={canvasRef} className="fixed inset-0 -z-10" />
-      <main className="min-h-screen pb-32 pt-20 overflow-x-hidden">
-        <div className="flex justify-center mb-12">
+      <main className="min-h-screen pb-16 pt-10 overflow-x-hidden">
+        <div className="flex justify-center mb-8">
           <svg
             className="h-16 w-auto text-white"
             viewBox="0 0 398.4 91.4"
@@ -551,7 +551,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <footer className="flex justify-center items-center p-4">
+        <footer className="flex justify-center items-center p-4 mt-4">
           <div className="flex items-center gap-2 text-white/80 hover:text-white transition-colors">
             <span className="text-sm">Powered by</span>
             <svg
