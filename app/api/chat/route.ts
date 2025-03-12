@@ -8,9 +8,8 @@ export async function POST(req: NextRequest) {
     const { messages, conversation_id } = await req.json();
 
     // The URL of your private Cloud Run service
-    // const backendUrl = "https://apb-tony-fork-136402401870.us-central1.run.app";
-    const backendUrl =
-      "https://ai-playground-backend-136402401870.us-central1.run.app";
+    const backendUrl = "https://apb-tony-fork-136402401870.us-central1.run.app";
+    // const backendUrl = "https://ai-playground-backend-136402401870.us-central1.run.app";
 
     // 1. Create a GoogleAuth client
 
