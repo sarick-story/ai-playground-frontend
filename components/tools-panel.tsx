@@ -112,17 +112,17 @@ export function ToolsPanel() {
                         exit={{ opacity: 0, y: 5 }}
                         className={`absolute z-10 w-full ${
                           // Adjust tooltip position based on the tool's position in the grid
-                          tools.indexOf(tool) < 2 ? "top-[110%]" : "bottom-[110%]"
+                          tools.findIndex((t) => t.id === tool.id) < 2 ? "top-[110%]" : "bottom-[110%]"
                         } left-0 p-3 bg-gray-900/95 backdrop-blur-md rounded-lg border border-gray-800 shadow-lg`}
                       >
                         <div className="text-xs text-gray-300">{tool.description}</div>
                         <div
                           className={`absolute ${
-                            tools.indexOf(tool) < 2 ? "top-0" : "bottom-0"
+                            tools.findIndex((t) => t.id === tool.id) < 2 ? "top-0" : "bottom-0"
                           } left-1/2 transform -translate-x-1/2 ${
-                            tools.indexOf(tool) < 2 ? "-translate-y-1/2" : "translate-y-1/2"
+                            tools.findIndex((t) => t.id === tool.id) < 2 ? "-translate-y-1/2" : "translate-y-1/2"
                           } rotate-45 w-2 h-2 bg-gray-900 ${
-                            tools.indexOf(tool) < 2 ? "border-l border-t" : "border-r border-b"
+                            tools.findIndex((t) => t.id === tool.id) < 2 ? "border-l border-t" : "border-r border-b"
                           } border-gray-800`}
                         />
                       </motion.div>
