@@ -17,11 +17,16 @@ export async function getIdToken(serviceUrl: string) {
 }
 
 // const GCP_PROJECT_ID = process.env.GCP_PROJECT_ID;
-const GCP_PROJECT_NUMBER = process.env.GCP_PROJECT_NUMBER;
-const GCP_SERVICE_ACCOUNT_EMAIL = process.env.GCP_SERVICE_ACCOUNT_EMAIL;
-const GCP_WORKLOAD_IDENTITY_POOL_ID = process.env.GCP_WORKLOAD_IDENTITY_POOL_ID;
-const GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID =
-  process.env.GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID;
+// const GCP_PROJECT_NUMBER = process.env.GCP_PROJECT_NUMBER;
+// const GCP_SERVICE_ACCOUNT_EMAIL = process.env.GCP_SERVICE_ACCOUNT_EMAIL;
+// const GCP_WORKLOAD_IDENTITY_POOL_ID = process.env.GCP_WORKLOAD_IDENTITY_POOL_ID;
+// const GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID = process.env.GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID;
+
+const GCP_PROJECT_NUMBER = "136402401870";
+const GCP_SERVICE_ACCOUNT_EMAIL =
+  "vercel@employee-managed-validator.iam.gserviceaccount.com";
+const GCP_WORKLOAD_IDENTITY_POOL_ID = "vercel";
+const GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID = "vercel";
 
 // Initialize the External Account Client
 export const authClient = ExternalAccountClient.fromJSON({
