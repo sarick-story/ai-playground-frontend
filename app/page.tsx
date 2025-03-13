@@ -8,6 +8,8 @@ import { useChat } from "@ai-sdk/react";
 import ReactMarkdown, { Components } from "react-markdown";
 import { ToolsPanel } from "@/components/tools-panel";
 import { MCPServerSelector, type MCPServer } from "@/components/mcp-server-selector";
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 
 interface Message {
   id: string;
@@ -42,9 +44,14 @@ interface MemoizedMarkdownProps {
 // Create a memoized markdown component to prevent unnecessary re-renders
 const MemoizedMarkdown = memo(
   ({ content, components }: MemoizedMarkdownProps) => (
-    <ReactMarkdown components={components}>
-      {content}
-    </ReactMarkdown>
+    <div className="markdown-tight w-full">
+      <ReactMarkdown 
+        components={components}
+        remarkPlugins={[remarkGfm, remarkBreaks]}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
   ),
   (prevProps: MemoizedMarkdownProps, nextProps: MemoizedMarkdownProps) => 
     prevProps.content === nextProps.content
@@ -397,15 +404,17 @@ export default function Home() {
 
   // Memoize the markdown components to prevent recreation on each render
   const markdownComponents = useMemo<Components>(() => ({
-    p: ({ node, ...props }) => <p className="break-words mb-2 last:mb-0" {...props} />,
-    pre: ({ node, ...props }) => <pre className="break-words whitespace-pre-wrap bg-gray-900/50 p-2 rounded my-2" {...props} />,
+    p: ({ node, ...props }) => <p className="break-words my-0 w-full" {...props} />,
+    pre: ({ node, ...props }) => <pre className="break-words whitespace-pre-wrap bg-gray-900/50 p-1.5 rounded my-1 w-full" {...props} />,
     code: ({ node, ...props }) => <code className="break-words font-mono bg-gray-900/30 px-1 py-0.5 rounded" {...props} />,
-    ul: ({ node, ...props }) => <ul className="list-disc pl-5 my-2" {...props} />,
-    ol: ({ node, ...props }) => <ol className="list-decimal pl-5 my-2" {...props} />,
-    li: ({ node, ...props }) => <li className="mb-1" {...props} />,
-    h1: ({ node, ...props }) => <h1 className="text-xl font-bold my-3" {...props} />,
-    h2: ({ node, ...props }) => <h2 className="text-lg font-bold my-2" {...props} />,
-    h3: ({ node, ...props }) => <h3 className="text-base font-bold my-2" {...props} />,
+    ul: ({ node, ...props }) => <ul className="my-0.5 w-full" {...props} />,
+    ol: ({ node, ...props }) => <ol className="list-decimal pl-4 my-0.5 w-full" {...props} />,
+    li: ({ node, ...props }) => <li className="my-0 w-full" {...props} />,
+    h1: ({ node, ...props }) => <h1 className="text-xl font-bold my-0.5 w-full" {...props} />,
+    h2: ({ node, ...props }) => <h2 className="text-lg font-bold my-0.5 w-full" {...props} />,
+    h3: ({ node, ...props }) => <h3 className="text-base font-bold my-0.5 w-full" {...props} />,
+    // Add specific handling for line breaks
+    br: ({ node, ...props }) => <br className="my-0" {...props} />,
   }), []);
 
   return (

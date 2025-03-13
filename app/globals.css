@@ -53,9 +53,24 @@ body {
 
 /* Add these classes to handle long text in chat messages */
 .chat-message {
-  word-break: break-all;
+  word-break: break-word;
   overflow-wrap: break-word;
   white-space: pre-wrap;
+  line-height: 1.2;
+}
+
+.chat-message p {
+  margin-top: 0.15rem;
+  margin-bottom: 0.15rem;
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+/* Ensure proper spacing in chat messages */
+.chat-message .markdown-tight {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 *::selection {
@@ -212,4 +227,108 @@ footer {
   overflow-y: auto;
   min-height: 350px; /* Ensure enough height for messages */
   height: auto; /* Allow it to grow */
+}
+
+/* Tight markdown styling specifically for chat messages */
+.markdown-tight {
+  line-height: 1.15;
+  width: 100%;
+}
+
+.markdown-tight p {
+  margin-top: 0.15rem;
+  margin-bottom: 0.15rem;
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.markdown-tight ul,
+.markdown-tight ol {
+  margin-top: 0.15rem;
+  margin-bottom: 0.15rem;
+  padding-left: 1.5rem;
+  list-style-position: outside;
+  width: 100%;
+}
+
+/* Custom bullet points for better alignment */
+.markdown-tight ul {
+  list-style: none;
+}
+
+.markdown-tight ul li {
+  position: relative;
+  padding-left: 0.5rem;
+}
+
+.markdown-tight ul li::before {
+  content: "•";
+  position: absolute;
+  left: -1rem;
+  top: 0;
+  display: inline-block;
+}
+
+.markdown-tight li {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  width: 100%;
+  position: relative;
+}
+
+.markdown-tight li p {
+  margin: 0;
+  display: inline;
+  width: 100%;
+}
+
+.markdown-tight h1,
+.markdown-tight h2,
+.markdown-tight h3 {
+  margin-top: 0.3rem;
+  margin-bottom: 0.15rem;
+  width: 100%;
+}
+
+.markdown-tight pre {
+  margin-top: 0.3rem;
+  margin-bottom: 0.3rem;
+  width: 100%;
+}
+
+.markdown-tight code {
+  white-space: break-spaces;
+}
+
+/* Remove extra spacing between paragraphs */
+.markdown-tight > p + p {
+  margin-top: 0.3rem;
+}
+
+/* Ensure no extra space at the beginning and end */
+.markdown-tight > *:first-child {
+  margin-top: 0;
+}
+
+.markdown-tight > *:last-child {
+  margin-bottom: 0;
+}
+
+/* Ensure line breaks work properly */
+.markdown-tight br {
+  content: "";
+  margin: 0;
+  display: block;
+}
+
+/* Fix for the chat message content */
+.chat-message {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  line-height: 1.2;
 }
