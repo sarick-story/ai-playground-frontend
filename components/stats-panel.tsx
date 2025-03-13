@@ -28,7 +28,11 @@ interface NetworkStats {
   transactions_today: string;
 }
 
-export function StatsPanel() {
+interface StatsPanelProps {
+  className?: string;
+}
+
+export function StatsPanel({ className = "" }: StatsPanelProps) {
   const [stats, setStats] = useState<NetworkStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -67,8 +71,8 @@ export function StatsPanel() {
   }
 
   return (
-    <div className="w-full flex-grow bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50">
-      <div className="p-6 space-y-6">
+    <div className={`w-full bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50 ${className}`}>
+      <div className="p-3 space-y-2 h-full flex flex-col">
         {/* Header with price and refresh */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -98,47 +102,47 @@ export function StatsPanel() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 flex-grow">
           {/* Network Stats */}
-          <div className="p-4 bg-gray-900/60 rounded-xl border border-gray-800">
+          <div className="p-2 bg-gray-900/60 rounded-xl border border-gray-800 flex flex-col justify-between">
             <div className="flex items-center space-x-2">
               <Activity className="w-4 h-4 text-cyan-500" />
               <span className="text-sm text-gray-400">Network Usage</span>
             </div>
-            <p className="mt-2 text-xl font-bold text-white">
+            <p className="mt-1 text-xl font-bold text-white">
               {stats?.network_utilization_percentage.toFixed(1)}%
             </p>
           </div>
 
           {/* Total Transactions */}
-          <div className="p-4 bg-gray-900/60 rounded-xl border border-gray-800">
+          <div className="p-2 bg-gray-900/60 rounded-xl border border-gray-800 flex flex-col justify-between">
             <div className="flex items-center space-x-2">
               <Box className="w-4 h-4 text-purple-500" />
               <span className="text-sm text-gray-400">Total Tx</span>
             </div>
-            <p className="mt-2 text-xl font-bold text-white">
+            <p className="mt-1 text-xl font-bold text-white">
               {formatNumber(Number.parseInt(stats?.total_transactions || "0"))}
             </p>
           </div>
 
           {/* Total Addresses */}
-          <div className="p-4 bg-gray-900/60 rounded-xl border border-gray-800">
+          <div className="p-2 bg-gray-900/60 rounded-xl border border-gray-800 flex flex-col justify-between">
             <div className="flex items-center space-x-2">
               <Users className="w-4 h-4 text-pink-500" />
               <span className="text-sm text-gray-400">Addresses</span>
             </div>
-            <p className="mt-2 text-xl font-bold text-white">
+            <p className="mt-1 text-xl font-bold text-white">
               {formatNumber(Number.parseInt(stats?.total_addresses || "0"))}
             </p>
           </div>
 
           {/* Block Time */}
-          <div className="p-4 bg-gray-900/60 rounded-xl border border-gray-800">
+          <div className="p-2 bg-gray-900/60 rounded-xl border border-gray-800 flex flex-col justify-between">
             <div className="flex items-center space-x-2">
               <Clock className="w-4 h-4 text-cyan-500" />
               <span className="text-sm text-gray-400">Block Time</span>
             </div>
-            <p className="mt-2 text-xl font-bold text-white">
+            <p className="mt-1 text-xl font-bold text-white">
               {stats?.average_block_time
                 ? (stats.average_block_time / 1000).toFixed(1)
                 : "0"}
@@ -147,24 +151,24 @@ export function StatsPanel() {
           </div>
 
           {/* Total Blocks */}
-          <div className="p-4 bg-gray-900/60 rounded-xl border border-gray-800">
+          <div className="p-2 bg-gray-900/60 rounded-xl border border-gray-800 flex flex-col justify-between">
             <div className="flex items-center space-x-2">
               <Database className="w-4 h-4 text-purple-500" />
               <span className="text-sm text-gray-400">Blocks</span>
             </div>
-            <p className="mt-2 text-xl font-bold text-white">
+            <p className="mt-1 text-xl font-bold text-white">
               {formatNumber(Number.parseInt(stats?.total_blocks || "0"))}
             </p>
           </div>
 
           {/* Gas Prices */}
-          <div className="p-4 bg-gray-900/60 rounded-xl border border-gray-800">
+          <div className="p-2 bg-gray-900/60 rounded-xl border border-gray-800 flex flex-col justify-between">
             <div className="flex items-center space-x-2">
               <Zap className="w-4 h-4 text-pink-500" />
               <span className="text-sm text-gray-400">Gas (Gwei)</span>
             </div>
-            <p className="mt-2 text-sm font-medium text-white">
-              {stats?.gas_prices.average} avg · {stats?.gas_prices.fast} fast
+            <p className="mt-1 text-xl font-bold text-white">
+              {stats?.gas_prices.average}
             </p>
           </div>
         </div>

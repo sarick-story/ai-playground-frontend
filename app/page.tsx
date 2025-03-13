@@ -411,8 +411,8 @@ export default function Home() {
   return (
     <>
       <canvas ref={canvasRef} className="fixed inset-0 -z-10" />
-      <main className="min-h-screen pb-16 pt-10 overflow-x-hidden">
-        <div className="flex justify-center mb-8">
+      <main className="main-container">
+        <div className="flex justify-center mb-4">
           <svg
             className="h-16 w-auto text-white"
             viewBox="0 0 398.4 91.4"
@@ -427,13 +427,13 @@ export default function Home() {
             <path d="M192.4,81c19.4,0,34-15.3,34-35.7h-15.8c0,11-8,19-18.1,19V81z" />
           </svg>
         </div>
-        <div className="container mx-auto flex flex-col lg:flex-row gap-8 items-start justify-center">
-          <div className="flex flex-col gap-6 w-full lg:w-[600px] lg:min-h-[776px] flex-shrink-0">
-            <StatsPanel />
-            <TransactionTable />
+        <div className="container content-container">
+          <div className="left-column w-full lg:w-[600px] flex flex-col justify-between">
+            <StatsPanel className="stats-panel mb-4" />
+            <TransactionTable className="transaction-table flex-grow" />
           </div>
 
-          <div className="w-full flex-shrink-0 max-h-[776px] flex flex-col lg:w-[700px] bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50">
+          <div className="right-column w-full lg:w-[700px] bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50 chat-panel flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-gray-800">
               <h2 className="text-xl font-[var(--font-space-grotesk),_var(--font-ibm-plex-mono),_sans-serif] text-white">
                 MCP Agent Playground
@@ -451,7 +451,7 @@ export default function Home() {
             </div>
 
             <div
-              className="h-[550px] overflow-y-auto p-4 space-y-4 bg-transparent"
+              className="chat-messages p-4 space-y-4 bg-transparent custom-scrollbar"
               style={{ overscrollBehavior: "contain" }}
             >
               {messages.map((message) => (
@@ -557,7 +557,7 @@ export default function Home() {
                     <button
                       type="submit"
                       disabled={isLoading || !aiInput.trim()}
-                      className="size-8 ml-auto aspect-square flex-shrink-0 flex items-center justify-center rounded-full bg-gradient-to-r from-purple-500/90 to-pink-500/90 text-white backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 size-8 aspect-square flex-shrink-0 flex items-center justify-center rounded-full bg-gradient-to-r from-purple-500/90 to-pink-500/90 text-white backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ArrowRight className="h-5 w-5" />
                     </button>
@@ -567,7 +567,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <footer className="flex justify-center items-center p-4 mt-4">
+        <footer className="flex justify-center items-center mt-2">
           <div className="flex items-center gap-2 text-white/80 hover:text-white transition-colors">
             <span className="text-sm">Powered by</span>
             <svg

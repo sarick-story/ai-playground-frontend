@@ -3,10 +3,15 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    font-size: 90%; /* Increase from 80% to 90% */
+  }
+  
   body {
     @apply antialiased;
     font-family: var(--font-ibm-plex-mono), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
       Cantarell, "Open Sans", "Helvetica Neue", monospace;
+    font-size: 1rem; /* Use relative sizing */
   }
 
   h1,
@@ -80,4 +85,131 @@ body {
 /* For Firefox */
 * {
   scrollbar-color: #404040 #1a1a1a;
+}
+
+/* Scaling for components */
+.main-container {
+  padding-top: 2rem;
+  padding-bottom: 0.5rem;
+}
+
+/* Component scaling */
+.container {
+  max-width: 90%;
+  margin: 0 auto;
+}
+
+/* Adjust component heights to match 80% zoom */
+.stats-panel {
+  max-height: 20rem;
+  min-height: 20rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.transaction-table {
+  max-height: 27rem; /* Reduced from 27.5rem to 27rem to match chat window exactly */
+  min-height: 27rem; /* Reduced from 27.5rem to 27rem to match chat window exactly */
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Add styles for fixed table headers */
+.transaction-table-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #1a1a2e;
+  border-bottom: 1px solid #2a2a3a;
+}
+
+.chat-panel {
+  max-height: 48rem;
+}
+
+/* Ensure proper alignment between transaction table and chat window */
+.content-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.left-column, .right-column {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Make sure the transaction table and chat window align at the bottom */
+@media (min-width: 1024px) {
+  .content-container {
+    align-items: stretch;
+  }
+  
+  .left-column, .right-column {
+    height: 48rem; /* Fixed height for both columns */
+  }
+  
+  .stats-panel {
+    flex-shrink: 0;
+  }
+  
+  .transaction-table {
+    flex-grow: 1;
+    overflow: auto;
+  }
+}
+
+/* Scale down specific elements */
+.h-16 {
+  height: 4rem !important;
+}
+
+.text-xl {
+  font-size: 1.25rem !important;
+  line-height: 1.75rem !important;
+}
+
+.text-sm {
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+}
+
+.p-4 {
+  padding: 1rem !important;
+}
+
+.p-6 {
+  padding: 1.5rem !important;
+}
+
+.gap-8 {
+  gap: 2rem !important;
+}
+
+.gap-6 {
+  gap: 1.5rem !important;
+}
+
+.gap-4 {
+  gap: 1rem !important;
+}
+
+.mb-8 {
+  margin-bottom: 2rem !important;
+}
+
+/* Ensure footer has minimal padding */
+footer {
+  padding: 0.25rem 0;
+  margin-top: 0.25rem;
+}
+
+.chat-messages {
+  flex-grow: 1;
+  overflow-y: auto;
+  min-height: 350px; /* Ensure enough height for messages */
+  height: auto; /* Allow it to grow */
 }
