@@ -5,17 +5,37 @@ import { googleAuth } from "./auth";
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000";
 
 async function generateHeaders() {
-  if (!process.env.GOOGLE_KEY_JSON) {
-    return {
-      "Content-Type": "application/json",
-    };
+  // Default headers
+  const headers = {
+    "Content-Type": "application/json",
+  };
+
+  // Only attempt to add auth headers if GOOGLE_KEY_JSON is provided
+  if (process.env.GOOGLE_KEY_JSON) {
+    try {
+      const idTokenClient = await googleAuth.getIdTokenClient(BACKEND_URL);
+      const authHeaders = await idTokenClient.getRequestHeaders();
+      return {
+        ...headers,
+        ...authHeaders,
+      };
+    } catch (error) {
+      console.warn("Failed to generate auth headers:", error);
+      // Continue without auth headers
+    }
   }
 
-  const idTokenClient = await googleAuth.getIdTokenClient(BACKEND_URL);
-  const authHeaders = await idTokenClient.getRequestHeaders();
+  return headers;
+}
+
+// Generate a mock response for local development when backend is unavailable
+function generateMockResponse(messages: any[]) {
+  const lastUserMessage = messages.findLast(msg => msg.role === 'user')?.content || '';
+  
   return {
-    "Content-Type": "application/json",
-    ...authHeaders,
+    id: `mock-${Date.now()}`,
+    content: `This is a mock response for local development. You said: "${lastUserMessage}". The backend server is not available. Please check your BACKEND_URL environment variable and ensure the backend server is running.`,
+    role: 'assistant',
   };
 }
 
@@ -33,66 +53,84 @@ export async function POST(req: NextRequest) {
 
     console.log("Forwarding request to backend:", `${backendUrl}/api/chat`);
 
-    const headers = await generateHeaders();
-
-    // Forward the request to the backend server
-    const response = await fetch(`${backendUrl}/api/chat`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        messages,
-        conversation_id, // Use the conversation_id from the request
-      }),
-    });
-
-    // Handle non-OK responses
-    if (!response.ok) {
-      console.error("Backend error:", response.status, response.statusText);
-      let errorData;
-      try {
-        errorData = await response.json();
-      } catch (e) {
-        errorData = { message: "Failed to parse error response" };
-      }
-
-      return new Response(
-        JSON.stringify({
-          error:
-            errorData?.message || errorData || "Failed to fetch from backend",
-          status: response.status,
-        }),
-        {
-          status: response.status,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+    // Generate headers with error handling
+    let headers;
+    try {
+      headers = await generateHeaders();
+    } catch (error) {
+      console.error("Error generating headers:", error);
+      headers = { "Content-Type": "application/json" };
     }
 
-    // For streaming responses, we need to forward the response as-is
-    if (response.headers.get("content-type")?.includes("text/event-stream")) {
-      // Get the response body as a ReadableStream
-      const body = response.body;
-      if (!body) {
-        throw new Error("No response body from backend");
+    try {
+      // Forward the request to the backend server
+      const response = await fetch(`${backendUrl}/api/chat`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          messages,
+          conversation_id, // Use the conversation_id from the request
+        }),
+      });
+
+      // Handle non-OK responses
+      if (!response.ok) {
+        console.error("Backend error:", response.status, response.statusText);
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          errorData = { message: "Failed to parse error response" };
+        }
+
+        return new Response(
+          JSON.stringify({
+            error:
+              errorData?.message || errorData || "Failed to fetch from backend",
+            status: response.status,
+          }),
+          {
+            status: response.status,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
       }
 
-      // Return a streaming response
-      return new Response(body, {
-        headers: {
-          "Content-Type": "text/event-stream",
-          "Cache-Control": "no-cache",
-          Connection: "keep-alive",
-          "x-vercel-ai-data-stream":
-            response.headers.get("x-vercel-ai-data-stream") || "v1",
-        },
+      // For streaming responses, we need to forward the response as-is
+      if (response.headers.get("content-type")?.includes("text/event-stream")) {
+        // Get the response body as a ReadableStream
+        const body = response.body;
+        if (!body) {
+          throw new Error("No response body from backend");
+        }
+
+        // Return a streaming response
+        return new Response(body, {
+          headers: {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            Connection: "keep-alive",
+            "x-vercel-ai-data-stream":
+              response.headers.get("x-vercel-ai-data-stream") || "v1",
+          },
+        });
+      }
+
+      // For non-streaming responses, return the JSON data
+      const data = await response.json();
+      return new Response(JSON.stringify(data), {
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      console.warn("Backend connection error:", error);
+      console.log("Returning mock response for local development");
+      
+      // Return a mock response for local development
+      const mockResponse = generateMockResponse(messages);
+      return new Response(JSON.stringify(mockResponse), {
+        headers: { "Content-Type": "application/json" },
       });
     }
-
-    // For non-streaming responses, return the JSON data
-    const data = await response.json();
-    return new Response(JSON.stringify(data), {
-      headers: { "Content-Type": "application/json" },
-    });
   } catch (error) {
     console.error("Error in chat API route:", error);
     return new Response(
