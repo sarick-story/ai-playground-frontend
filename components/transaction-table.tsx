@@ -61,7 +61,11 @@ interface Transaction {
   };
 }
 
-export function TransactionTable() {
+interface TransactionTableProps {
+  className?: string;
+}
+
+export function TransactionTable({ className = "" }: TransactionTableProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -129,7 +133,7 @@ export function TransactionTable() {
   }, []);
 
   return (
-    <div className="bg-black/80 flex-grow backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50 w-full flex flex-col h-[400px]">
+    <div className={`bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50 w-full flex flex-col ${className}`}>
       <div className="flex items-center justify-between p-4 border-b border-gray-800">
         <h2 className="text-xl font-[var(--font-space-grotesk),_var(--font-ibm-plex-mono),_sans-serif] text-white">
           Latest Transactions
@@ -143,9 +147,9 @@ export function TransactionTable() {
         </button>
       </div>
       <div className="flex-1 overflow-hidden">
-        <div className="overflow-y-auto h-full">
+        <div className="overflow-y-auto h-full custom-scrollbar">
           <table className="w-full table-fixed">
-            <thead className="bg-gray-900/60 sticky top-0 z-10">
+            <thead className="transaction-table-header">
               <tr>
                 <th className="w-[20%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   Type
@@ -163,7 +167,7 @@ export function TransactionTable() {
             </thead>
             <tbody className="divide-y divide-gray-800">
               {loading ? (
-                Array(6)
+                Array(10)
                   .fill(0)
                   .map((_, index) => (
                     <tr key={index} className="animate-pulse">
@@ -176,7 +180,7 @@ export function TransactionTable() {
                 <tr>
                   <td
                     colSpan={4}
-                    className="h-[252px] px-4 text-center text-red-400"
+                    className="px-4 py-4 text-center text-red-400"
                   >
                     {error}
                   </td>
@@ -185,15 +189,14 @@ export function TransactionTable() {
                 <tr>
                   <td
                     colSpan={4}
-                    className="h-[252px] px-4 text-center text-gray-400"
+                    className="px-4 py-4 text-center text-gray-400"
                   >
                     No transactions found
                   </td>
                 </tr>
               ) : (
-                transactions.slice(0, 6).map((tx, index) => {
+                transactions.slice(0, 10).map((tx, index) => {
                   // Get the actual recipient address and amount from decoded input
-                  // const recipientAddress = tx.decoded_input?.parameters?.find((p) => p.name === "to")?.value || "";
                   const amount =
                     tx.decoded_input?.parameters?.find(
                       (p) => p.name === "value"
@@ -202,7 +205,7 @@ export function TransactionTable() {
                   return (
                     <tr
                       key={tx.hash || index}
-                      className="h-[42px] hover:bg-gray-900/40"
+                      className="hover:bg-gray-900/40"
                     >
                       <td className="px-4 py-3 text-sm truncate">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-800/60 text-cyan-500">
