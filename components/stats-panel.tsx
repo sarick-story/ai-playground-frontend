@@ -80,7 +80,7 @@ export function StatsPanel() {
               />
             )}
             <div>
-              <h3 className="text-xl font-['Acronym',_var(--font-ibm-plex-mono),_sans-serif] text-white">
+              <h3 className="text-xl font-[var(--font-space-grotesk),_var(--font-ibm-plex-mono),_sans-serif] text-white">
                 ${stats?.coin_price || "0.00"}
               </h3>
               <p className="text-sm text-gray-400">Current Price</p>

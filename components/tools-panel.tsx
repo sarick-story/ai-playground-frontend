@@ -77,7 +77,7 @@ export function ToolsPanel() {
             className="absolute right-0 top-12 z-50 w-80 bg-black/90 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-800/50"
           >
             <div className="p-4 border-b border-gray-800">
-              <h3 className="text-lg font-['Acronym',_var(--font-ibm-plex-mono),_sans-serif] text-white">
+              <h3 className="text-lg font-[var(--font-space-grotesk),_var(--font-ibm-plex-mono),_sans-serif] text-white">
                 Available Tools
               </h3>
               <p className="text-xs text-gray-400 mt-1">Hover over a tool to see its description</p>

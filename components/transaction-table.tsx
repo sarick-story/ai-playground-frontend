@@ -131,7 +131,7 @@ export function TransactionTable() {
   return (
     <div className="bg-black/80 flex-grow backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50 w-full flex flex-col h-[400px]">
       <div className="flex items-center justify-between p-4 border-b border-gray-800">
-        <h2 className="text-xl font-['Acronym',_var(--font-ibm-plex-mono),_sans-serif] text-white">
+        <h2 className="text-xl font-[var(--font-space-grotesk),_var(--font-ibm-plex-mono),_sans-serif] text-white">
           Latest Transactions
         </h2>
         <button

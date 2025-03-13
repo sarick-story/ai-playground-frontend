@@ -435,7 +435,7 @@ export default function Home() {
 
           <div className="w-full flex-shrink-0 max-h-[776px] flex flex-col lg:w-[700px] bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50">
             <div className="flex items-center justify-between p-4 border-b border-gray-800">
-              <h2 className="text-xl font-['Acronym',_var(--font-ibm-plex-mono),_sans-serif] text-white">
+              <h2 className="text-xl font-[var(--font-space-grotesk),_var(--font-ibm-plex-mono),_sans-serif] text-white">
                 MCP Agent Playground
               </h2>
               <ToolsPanel />
