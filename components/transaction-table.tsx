@@ -69,14 +69,16 @@ export function TransactionTable({ className = "" }: TransactionTableProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [transactionCount, setTransactionCount] = useState(10); // Default to 10 transactions
 
   const fetchTransactions = async () => {
     try {
       setLoading(true);
       setError(null);
 
+      // Use query parameters to filter transactions by method and limit results
       const response = await fetch(
-        "https://www.storyscan.xyz/api/v2/transactions?filter=validated&type=coin_transfer%2Ctoken_transfer&method=transfer",
+        `https://www.storyscan.xyz/api/v2/transactions?filter=validated&method=approve,transfer,multicall,mint,commit&items_count=${transactionCount}`,
         {
           headers: {
             accept: "application/json",
@@ -97,7 +99,8 @@ export function TransactionTable({ className = "" }: TransactionTableProps) {
 
       const formattedTransactions = data.items.map((item: any) => ({
         hash: item.hash || "",
-        type: Array.isArray(item.transaction_types)
+        // If transaction_types is an array, use the first type, otherwise use the string or default
+        type: Array.isArray(item.transaction_types) && item.transaction_types.length > 0
           ? item.transaction_types[0]
           : item.transaction_types || "contract_call",
         status: item.status || "pending",
@@ -130,7 +133,64 @@ export function TransactionTable({ className = "" }: TransactionTableProps) {
 
   useEffect(() => {
     fetchTransactions();
-  }, []);
+  }, [transactionCount]);
+
+  // Helper function to get a more user-friendly display name for transaction types
+  const getTransactionTypeDisplay = (type: string): string => {
+    const typeMap: Record<string, string> = {
+      "token_transfer": "Token Transfer",
+      "contract_call": "Contract Call",
+      "coin_transfer": "Coin Transfer",
+      "contract_creation": "Contract Creation",
+      "token_creation": "Token Creation"
+    };
+    
+    return typeMap[type.toLowerCase()] || type.replace(/_/g, " ");
+  };
+
+  // Helper function to get a more user-friendly display name for transaction methods
+  const getMethodDisplay = (method: string): string => {
+    const methodMap: Record<string, string> = {
+      "approve": "Approve",
+      "transfer": "Transfer",
+      "multicall": "Multi Call",
+      "mint": "Mint",
+      "commit": "Commit",
+      "transferFrom": "Transfer From"
+    };
+    
+    return methodMap[method] || method.charAt(0).toUpperCase() + method.slice(1);
+  };
+
+  // Helper function to extract the appropriate amount based on transaction method
+  const getTransactionAmount = (tx: Transaction): string => {
+    if (tx.method === "approve") {
+      // For approve transactions, get the allowance amount
+      const allowance = tx.decoded_input?.parameters?.find(
+        (p) => p.name === "value" || p.name === "amount" || p.name === "allowance"
+      )?.value;
+      
+      // If the allowance is the max uint256 value, display "Unlimited"
+      if (allowance && allowance.startsWith("115792089237316195423570985008687907853269984665640564039457584007")) {
+        return "Unlimited";
+      }
+      
+      return allowance || "0";
+    } else if (tx.method === "transfer" || tx.method === "transferFrom") {
+      // For transfer transactions, get the transfer amount
+      return tx.decoded_input?.parameters?.find(
+        (p) => p.name === "value" || p.name === "amount"
+      )?.value || tx.value || "0";
+    } else if (tx.method === "mint") {
+      // For mint transactions, get the mint amount
+      return tx.decoded_input?.parameters?.find(
+        (p) => p.name === "amount" || p.name === "value"
+      )?.value || "0";
+    }
+    
+    // Default fallback
+    return tx.value || "0";
+  };
 
   return (
     <div className={`bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50 w-full flex flex-col ${className}`}>
@@ -167,7 +227,7 @@ export function TransactionTable({ className = "" }: TransactionTableProps) {
             </thead>
             <tbody className="divide-y divide-gray-800">
               {loading ? (
-                Array(10)
+                Array(transactionCount)
                   .fill(0)
                   .map((_, index) => (
                     <tr key={index} className="animate-pulse">
@@ -195,12 +255,14 @@ export function TransactionTable({ className = "" }: TransactionTableProps) {
                   </td>
                 </tr>
               ) : (
-                transactions.slice(0, 10).map((tx, index) => {
-                  // Get the actual recipient address and amount from decoded input
-                  const amount =
-                    tx.decoded_input?.parameters?.find(
-                      (p) => p.name === "value"
-                    )?.value || "0";
+                transactions.map((tx, index) => {
+                  // Get the appropriate amount based on transaction method
+                  const amount = getTransactionAmount(tx);
+                  
+                  // Get the recipient address for display
+                  const recipient = tx.method === "approve" 
+                    ? tx.decoded_input?.parameters?.find(p => p.name === "spender")?.value 
+                    : tx.to.hash;
 
                   return (
                     <tr
@@ -208,8 +270,15 @@ export function TransactionTable({ className = "" }: TransactionTableProps) {
                       className="hover:bg-gray-900/40"
                     >
                       <td className="px-4 py-3 text-sm truncate">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-800/60 text-cyan-500">
-                          {tx.type.toLowerCase().replace(/_/g, " ")}
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          tx.method === "approve" ? "bg-blue-800/60 text-blue-300" :
+                          tx.method === "transfer" ? "bg-purple-800/60 text-purple-300" :
+                          tx.method === "mint" ? "bg-green-800/60 text-green-300" :
+                          tx.method === "multicall" ? "bg-yellow-800/60 text-yellow-300" :
+                          tx.method === "commit" ? "bg-orange-800/60 text-orange-300" :
+                          "bg-gray-800/60 text-gray-300"
+                        }`}>
+                          {getMethodDisplay(tx.method)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm font-mono text-gray-300 truncate">
@@ -232,8 +301,13 @@ export function TransactionTable({ className = "" }: TransactionTableProps) {
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-300 truncate">
                         <span className="font-medium text-purple-400 whitespace-nowrap">
-                          {formatTokenValue(amount)} {tx.to.name || ""}
+                          {amount === "Unlimited" ? amount : formatTokenValue(amount)} {tx.to.name || ""}
                         </span>
+                        {tx.method === "approve" && recipient && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            Spender: {truncateHash(recipient)}
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-400">
                         {tx.timestamp}
@@ -246,6 +320,18 @@ export function TransactionTable({ className = "" }: TransactionTableProps) {
           </table>
         </div>
       </div>
+      
+      {/* Add a "Load More" button at the bottom */}
+      {!loading && !error && transactions.length > 0 && (
+        <div className="p-3 border-t border-gray-800 text-center">
+          <button 
+            onClick={() => setTransactionCount(prev => prev + 10)}
+            className="text-sm text-gray-400 hover:text-white transition-colors"
+          >
+            Load More Transactions
+          </button>
+        </div>
+      )}
     </div>
   );
 }
