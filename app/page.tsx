@@ -451,16 +451,36 @@ export default function Home() {
                     <ReactMarkdown
                       components={{
                         p: ({ children }) => (
-                          <p className="break-words">{children}</p>
+                          <p className="break-words mb-2 last:mb-0">{children}</p>
                         ),
                         // Add other elements you want to style
                         pre: ({ children }) => (
-                          <pre className="break-words whitespace-pre-wrap">
+                          <pre className="break-words whitespace-pre-wrap bg-gray-900/50 p-2 rounded my-2">
                             {children}
                           </pre>
                         ),
                         code: ({ children }) => (
-                          <code className="break-words">{children}</code>
+                          <code className="break-words font-mono bg-gray-900/30 px-1 py-0.5 rounded">
+                            {children}
+                          </code>
+                        ),
+                        ul: ({ children }) => (
+                          <ul className="list-disc pl-5 my-2">{children}</ul>
+                        ),
+                        ol: ({ children }) => (
+                          <ol className="list-decimal pl-5 my-2">{children}</ol>
+                        ),
+                        li: ({ children }) => (
+                          <li className="mb-1">{children}</li>
+                        ),
+                        h1: ({ children }) => (
+                          <h1 className="text-xl font-bold my-3">{children}</h1>
+                        ),
+                        h2: ({ children }) => (
+                          <h2 className="text-lg font-bold my-2">{children}</h2>
+                        ),
+                        h3: ({ children }) => (
+                          <h3 className="text-base font-bold my-2">{children}</h3>
                         ),
                       }}
                     >
