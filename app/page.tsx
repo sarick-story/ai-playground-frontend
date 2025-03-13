@@ -1,11 +1,11 @@
 "use client";
 import { motion } from "framer-motion";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo, memo } from "react";
 import { ArrowRight } from "lucide-react";
 import { TransactionTable } from "@/components/transaction-table";
 import { StatsPanel } from "@/components/stats-panel";
 import { useChat } from "@ai-sdk/react";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { Components } from "react-markdown";
 import { ToolsPanel } from "@/components/tools-panel";
 import { MCPServerSelector, type MCPServer } from "@/components/mcp-server-selector";
 
@@ -32,6 +32,23 @@ const MCP_SERVERS: MCPServer[] = [
     comingSoon: true,
   },
 ];
+
+// Define props interface for the memoized markdown component
+interface MemoizedMarkdownProps {
+  content: string;
+  components: Components;
+}
+
+// Create a memoized markdown component to prevent unnecessary re-renders
+const MemoizedMarkdown = memo(
+  ({ content, components }: MemoizedMarkdownProps) => (
+    <ReactMarkdown components={components}>
+      {content}
+    </ReactMarkdown>
+  ),
+  (prevProps: MemoizedMarkdownProps, nextProps: MemoizedMarkdownProps) => 
+    prevProps.content === nextProps.content
+);
 
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -378,6 +395,19 @@ export default function Home() {
     console.log(`MCP Server changed to: ${serverId}`);
   };
 
+  // Memoize the markdown components to prevent recreation on each render
+  const markdownComponents = useMemo<Components>(() => ({
+    p: ({ node, ...props }) => <p className="break-words mb-2 last:mb-0" {...props} />,
+    pre: ({ node, ...props }) => <pre className="break-words whitespace-pre-wrap bg-gray-900/50 p-2 rounded my-2" {...props} />,
+    code: ({ node, ...props }) => <code className="break-words font-mono bg-gray-900/30 px-1 py-0.5 rounded" {...props} />,
+    ul: ({ node, ...props }) => <ul className="list-disc pl-5 my-2" {...props} />,
+    ol: ({ node, ...props }) => <ol className="list-decimal pl-5 my-2" {...props} />,
+    li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+    h1: ({ node, ...props }) => <h1 className="text-xl font-bold my-3" {...props} />,
+    h2: ({ node, ...props }) => <h2 className="text-lg font-bold my-2" {...props} />,
+    h3: ({ node, ...props }) => <h3 className="text-base font-bold my-2" {...props} />,
+  }), []);
+
   return (
     <>
       <canvas ref={canvasRef} className="fixed inset-0 -z-10" />
@@ -448,44 +478,10 @@ export default function Home() {
                         : "bg-gray-800/70 text-gray-100 backdrop-blur-sm"
                     }`}
                   >
-                    <ReactMarkdown
-                      components={{
-                        p: ({ children }) => (
-                          <p className="break-words mb-2 last:mb-0">{children}</p>
-                        ),
-                        // Add other elements you want to style
-                        pre: ({ children }) => (
-                          <pre className="break-words whitespace-pre-wrap bg-gray-900/50 p-2 rounded my-2">
-                            {children}
-                          </pre>
-                        ),
-                        code: ({ children }) => (
-                          <code className="break-words font-mono bg-gray-900/30 px-1 py-0.5 rounded">
-                            {children}
-                          </code>
-                        ),
-                        ul: ({ children }) => (
-                          <ul className="list-disc pl-5 my-2">{children}</ul>
-                        ),
-                        ol: ({ children }) => (
-                          <ol className="list-decimal pl-5 my-2">{children}</ol>
-                        ),
-                        li: ({ children }) => (
-                          <li className="mb-1">{children}</li>
-                        ),
-                        h1: ({ children }) => (
-                          <h1 className="text-xl font-bold my-3">{children}</h1>
-                        ),
-                        h2: ({ children }) => (
-                          <h2 className="text-lg font-bold my-2">{children}</h2>
-                        ),
-                        h3: ({ children }) => (
-                          <h3 className="text-base font-bold my-2">{children}</h3>
-                        ),
-                      }}
-                    >
-                      {message.content}
-                    </ReactMarkdown>
+                    <MemoizedMarkdown 
+                      content={message.content}
+                      components={markdownComponents}
+                    />
                     <p className="text-xs opacity-70 mt-1">
                       {message.timestamp.toLocaleTimeString([], {
                         hour: "2-digit",
