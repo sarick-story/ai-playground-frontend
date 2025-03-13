@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
-import { Wallet, History, BarChart2, User, Coins, Image, FileText, Info, X } from "lucide-react"
+import { History, BarChart2, User, Coins, Image, FileText, Info, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 interface Tool {
@@ -13,12 +13,6 @@ interface Tool {
 }
 
 const tools: Tool[] = [
-  {
-    id: "check_balance",
-    name: "Check Balance",
-    description: "Checks the balance of a given address on the blockchain.",
-    icon: Wallet,
-  },
   {
     id: "get_transactions",
     name: "Get Transactions",
