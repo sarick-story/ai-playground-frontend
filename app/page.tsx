@@ -1,11 +1,13 @@
 "use client";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { TransactionTable } from "@/components/transaction-table";
 import { StatsPanel } from "@/components/stats-panel";
 import { useChat } from "@ai-sdk/react";
 import ReactMarkdown from "react-markdown";
+import { ToolsPanel } from "@/components/tools-panel";
+import { MCPServerSelector, type MCPServer } from "@/components/mcp-server-selector";
 
 interface Message {
   id: string;
@@ -13,6 +15,23 @@ interface Message {
   sender: "user" | "bot";
   timestamp: Date;
 }
+
+// Define available MCP servers
+const MCP_SERVERS: MCPServer[] = [
+  {
+    id: "storyscan",
+    name: "Storyscan MCP",
+    description: "The official Storyscan Model Context Protocol server",
+    available: true,
+  },
+  {
+    id: "sdk",
+    name: "Story SDK MCP",
+    description: "Advanced MCP server with SDK integration capabilities",
+    available: false,
+    comingSoon: true,
+  },
+];
 
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -37,6 +56,7 @@ export default function Home() {
     useState<WebGLUniformLocation | null>(null);
   const [resolutionLocation, setResolutionLocation] =
     useState<WebGLUniformLocation | null>(null);
+  const [selectedMCPServerId, setSelectedMCPServerId] = useState<string>("storyscan");
 
   // Use Vercel AI SDK for chat
   const {
@@ -351,11 +371,18 @@ export default function Home() {
     handleSubmit(e);
   };
 
+  // Handle MCP server selection
+  const handleMCPServerSelect = (serverId: string) => {
+    setSelectedMCPServerId(serverId);
+    // You could add additional logic here to change API endpoints based on the selected server
+    console.log(`MCP Server changed to: ${serverId}`);
+  };
+
   return (
     <>
       <canvas ref={canvasRef} className="fixed inset-0 -z-10" />
-      <main className="min-h-screen pb-32 pt-20 overflow-x-hidden">
-        <div className="flex justify-center mb-12">
+      <main className="min-h-screen pb-16 pt-10 overflow-x-hidden">
+        <div className="flex justify-center mb-8">
           <svg
             className="h-16 w-auto text-white"
             viewBox="0 0 398.4 91.4"
@@ -376,15 +403,25 @@ export default function Home() {
             <TransactionTable />
           </div>
 
-          <div className="w-full flex-shrink-0 max-h-[776px] flex flex-col lg:w-[600px] bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50">
-            <div className="flex items-center justify-center p-4 border-b border-gray-800">
+          <div className="w-full flex-shrink-0 max-h-[776px] flex flex-col lg:w-[700px] bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50">
+            <div className="flex items-center justify-between p-4 border-b border-gray-800">
               <h2 className="text-xl font-['Acronym',_var(--font-ibm-plex-mono),_sans-serif] text-white">
                 MCP Agent Playground
               </h2>
+              <ToolsPanel />
+            </div>
+
+            {/* MCP Server Selector Section */}
+            <div className="p-4 border-b border-gray-800/50 bg-gray-900/30">
+              <MCPServerSelector 
+                servers={MCP_SERVERS} 
+                selectedServerId={selectedMCPServerId} 
+                onServerSelect={handleMCPServerSelect} 
+              />
             </div>
 
             <div
-              className="h-[600px] overflow-y-auto p-4 space-y-4 bg-transparent"
+              className="h-[550px] overflow-y-auto p-4 space-y-4 bg-transparent"
               style={{ overscrollBehavior: "contain" }}
             >
               {messages.map((message) => (
@@ -414,16 +451,36 @@ export default function Home() {
                     <ReactMarkdown
                       components={{
                         p: ({ children }) => (
-                          <p className="break-words">{children}</p>
+                          <p className="break-words mb-2 last:mb-0">{children}</p>
                         ),
                         // Add other elements you want to style
                         pre: ({ children }) => (
-                          <pre className="break-words whitespace-pre-wrap">
+                          <pre className="break-words whitespace-pre-wrap bg-gray-900/50 p-2 rounded my-2">
                             {children}
                           </pre>
                         ),
                         code: ({ children }) => (
-                          <code className="break-words">{children}</code>
+                          <code className="break-words font-mono bg-gray-900/30 px-1 py-0.5 rounded">
+                            {children}
+                          </code>
+                        ),
+                        ul: ({ children }) => (
+                          <ul className="list-disc pl-5 my-2">{children}</ul>
+                        ),
+                        ol: ({ children }) => (
+                          <ol className="list-decimal pl-5 my-2">{children}</ol>
+                        ),
+                        li: ({ children }) => (
+                          <li className="mb-1">{children}</li>
+                        ),
+                        h1: ({ children }) => (
+                          <h1 className="text-xl font-bold my-3">{children}</h1>
+                        ),
+                        h2: ({ children }) => (
+                          <h2 className="text-lg font-bold my-2">{children}</h2>
+                        ),
+                        h3: ({ children }) => (
+                          <h3 className="text-base font-bold my-2">{children}</h3>
                         ),
                       }}
                     >
@@ -492,7 +549,9 @@ export default function Home() {
                           }
                         }
                       }}
-                      placeholder="Ask about Story blockchain..."
+                      placeholder={`Ask about Story blockchain using ${
+                        MCP_SERVERS.find(server => server.id === selectedMCPServerId)?.name || "MCP"
+                      }...`}
                       rows={1}
                       className="w-full bg-transparent text-white focus:ring-0 focus:outline-none scrollbar-thin scrollbar-track-gray-900 scrollbar-thumb-gray-800 placeholder-gray-500 resize-none overflow-y-auto min-h-[48px] max-h-[200px]"
                       style={{
@@ -512,7 +571,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <footer className="flex justify-center items-center p-4">
+        <footer className="flex justify-center items-center p-4 mt-4">
           <div className="flex items-center gap-2 text-white/80 hover:text-white transition-colors">
             <span className="text-sm">Powered by</span>
             <svg
