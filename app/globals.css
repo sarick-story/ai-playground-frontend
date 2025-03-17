@@ -109,21 +109,31 @@ body {
 
 /* Component scaling */
 .container {
-  max-width: 95%;
+  width: 100%;
+  max-width: 100%;
+  padding: 0 1rem;
   margin: 0 auto;
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 95%;
+    padding: 0;
+  }
 }
 
 /* Adjust component heights to match 80% zoom */
 .stats-panel {
-  max-height: 20rem;
-  min-height: 20rem;
+  max-height: none;
+  min-height: auto;
   display: flex;
   flex-direction: column;
+  margin-bottom: 1rem;
 }
 
 .transaction-table {
-  max-height: 27rem; /* Reduced from 27.5rem to 27rem to match chat window exactly */
-  min-height: 27rem; /* Reduced from 27.5rem to 27rem to match chat window exactly */
+  max-height: 400px; /* Smaller height on mobile */
+  min-height: 300px;
   overflow-y: auto;
   position: relative;
 }
@@ -138,41 +148,60 @@ body {
 }
 
 .chat-panel {
-  max-height: 48rem;
+  max-height: none; /* Allow it to grow on mobile */
 }
 
 /* Ensure proper alignment between transaction table and chat window */
 .content-container {
   display: flex;
-  flex-direction: row;
-  align-items: flex-start;
+  flex-direction: column; /* Default to column for mobile */
+  align-items: center;
   justify-content: center;
   gap: 1.5rem;
+  width: 100%;
 }
 
 .left-column, .right-column {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  width: 100%; /* Full width on mobile */
+  height: auto;
 }
 
 /* Make sure the transaction table and chat window align at the bottom */
 @media (min-width: 1024px) {
   .content-container {
+    flex-direction: row; /* Switch to row on desktop */
     align-items: stretch;
+    justify-content: center;
   }
   
-  .left-column, .right-column {
+  .left-column {
+    width: 550px; /* Fixed width on desktop */
+    height: 48rem; /* Fixed height for both columns */
+  }
+  
+  .right-column {
+    width: 800px; /* Fixed width on desktop */
     height: 48rem; /* Fixed height for both columns */
   }
   
   .stats-panel {
+    max-height: 20rem;
+    min-height: 20rem;
     flex-shrink: 0;
+    margin-bottom: 1rem;
   }
   
   .transaction-table {
+    max-height: 27rem; /* Reduced from 27.5rem to 27rem to match chat window exactly */
+    min-height: 27rem; /* Reduced from 27.5rem to 27rem to match chat window exactly */
     flex-grow: 1;
     overflow: auto;
+  }
+  
+  .chat-panel {
+    max-height: 48rem;
   }
 }
 
