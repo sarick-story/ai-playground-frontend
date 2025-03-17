@@ -69,7 +69,7 @@ export function TransactionTable({ className = "" }: TransactionTableProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [transactionCount, setTransactionCount] = useState(10); // Default to 10 transactions
+  const [transactionCount] = useState(10); // Fixed to 10 transactions, removed state setter
 
   const fetchTransactions = async () => {
     try {
@@ -320,18 +320,6 @@ export function TransactionTable({ className = "" }: TransactionTableProps) {
           </table>
         </div>
       </div>
-      
-      {/* Add a "Load More" button at the bottom */}
-      {!loading && !error && transactions.length > 0 && (
-        <div className="p-3 border-t border-gray-800 text-center">
-          <button 
-            onClick={() => setTransactionCount(prev => prev + 10)}
-            className="text-sm text-gray-400 hover:text-white transition-colors"
-          >
-            Load More Transactions
-          </button>
-        </div>
-      )}
     </div>
   );
 }
