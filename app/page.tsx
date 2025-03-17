@@ -554,7 +554,7 @@ export default function Home() {
                           }
                         }
                       }}
-                      placeholder={`Ask about a wallet address or transaction using ${
+                      placeholder={`Ask about a wallet address, transaction, or blockchain stats using ${
                         MCP_SERVERS.find(server => server.id === selectedMCPServerId)?.name || "MCP"
                       }...`}
                       rows={1}
