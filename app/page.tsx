@@ -10,6 +10,8 @@ import { ToolsPanel } from "@/components/tools-panel";
 import { MCPServerSelector, type MCPServer } from "@/components/mcp-server-selector";
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
+import { StoryProtocolConnector } from "@/components/story-protocol-connector";
+import { useAccount } from "wagmi";
 
 interface Message {
   id: string;
@@ -30,8 +32,8 @@ const MCP_SERVERS: MCPServer[] = [
     id: "sdk",
     name: "Story SDK MCP",
     description: "Advanced MCP server with SDK integration capabilities",
-    available: false,
-    comingSoon: true,
+    available: true,
+    requiresWallet: true,
   },
 ];
 
@@ -81,6 +83,7 @@ export default function Home() {
   const [resolutionLocation, setResolutionLocation] =
     useState<WebGLUniformLocation | null>(null);
   const [selectedMCPServerId, setSelectedMCPServerId] = useState<string>("storyscan");
+  const { isConnected } = useAccount();
 
   // Use Vercel AI SDK for chat
   const {
@@ -416,6 +419,15 @@ export default function Home() {
     // Add specific handling for line breaks
     br: ({ node, ...props }) => <br className="my-0" {...props} />,
   }), []);
+
+  // Add a useEffect to handle wallet disconnection
+  useEffect(() => {
+    // If wallet disconnected and SDK server is selected, reset to Storyscan
+    if (!isConnected && selectedMCPServerId === "sdk") {
+      setSelectedMCPServerId("storyscan");
+      console.log("Wallet disconnected, reset to Storyscan MCP");
+    }
+  }, [isConnected, selectedMCPServerId]);
 
   return (
     <>

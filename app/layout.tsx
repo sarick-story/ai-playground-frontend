@@ -2,6 +2,9 @@ import type React from "react"
 import "./globals.css"
 import type { Metadata } from "next"
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google"
+import Web3Providers from "./Web3Providers"
+import { StoryProvider } from "@/lib/context/StoryContext"
+import { Header } from "@/components/header"
 
 const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
@@ -27,7 +30,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${ibmPlexMono.variable} ${spaceGrotesk.variable} font-mono`}>{children}</body>
+      <body className={`${ibmPlexMono.variable} ${spaceGrotesk.variable} font-mono`}>
+        <Web3Providers>
+          <StoryProvider>
+            <Header />
+            {children}
+          </StoryProvider>
+        </Web3Providers>
+      </body>
     </html>
   )
 }
