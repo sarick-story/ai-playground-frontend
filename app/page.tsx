@@ -420,8 +420,8 @@ export default function Home() {
   return (
     <>
       <canvas ref={canvasRef} className="fixed inset-0 -z-10" />
-      <main className="main-container">
-        <div className="flex justify-center mb-4">
+      <main className="main-container pt-8">
+        <div className="flex justify-center mb-8">
           <svg
             className="h-16 w-auto text-white"
             viewBox="0 0 398.4 91.4"
@@ -437,12 +437,12 @@ export default function Home() {
           </svg>
         </div>
         <div className="container content-container">
-          <div className="left-column w-full lg:w-[600px] flex flex-col justify-between">
+          <div className="left-column w-full lg:w-[550px] flex flex-col justify-between">
             <StatsPanel className="stats-panel mb-4" />
             <TransactionTable className="transaction-table flex-grow" />
           </div>
 
-          <div className="right-column w-full lg:w-[700px] bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50 chat-panel flex flex-col">
+          <div className="right-column w-full lg:w-[800px] bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50 chat-panel flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-gray-800">
               <h2 className="text-xl font-[var(--font-space-grotesk),_var(--font-ibm-plex-mono),_sans-serif] text-white">
                 MCP Agent Playground

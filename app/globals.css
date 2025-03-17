@@ -104,13 +104,12 @@ body {
 
 /* Scaling for components */
 .main-container {
-  padding-top: 2rem;
   padding-bottom: 0.5rem;
 }
 
 /* Component scaling */
 .container {
-  max-width: 90%;
+  max-width: 95%;
   margin: 0 auto;
 }
 
