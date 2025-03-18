@@ -10,6 +10,7 @@ interface Tool {
   name: string
   description: string
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
+  exampleQuery: string
 }
 
 const tools: Tool[] = [
@@ -19,6 +20,7 @@ const tools: Tool[] = [
     description:
       "Retrieves recent transactions for a specified address, with an optional limit on the number of transactions.",
     icon: History,
+    exampleQuery: "get transactions for 0x4a1AfcbcC103ECcB5907fe7a6F6d8b602De98dc5",
   },
   {
     id: "get_stats",
@@ -26,34 +28,43 @@ const tools: Tool[] = [
     description:
       "Fetches current blockchain statistics, including total blocks, average block time, total transactions, and more.",
     icon: BarChart2,
+    exampleQuery: "give me the story blockchain statistics",
   },
   {
     id: "get_address_overview",
     name: "Address Overview",
     description: "Provides a comprehensive overview of an address, including balance and contract status.",
     icon: User,
+    exampleQuery: "give me the address overview for 0x4a1AfcbcC103ECcB5907fe7a6F6d8b602De98dc5",
   },
   {
     id: "get_token_holdings",
     name: "Token Holdings",
     description: "Lists all ERC-20 token holdings for a specified address, including detailed token information.",
     icon: Coins,
+    exampleQuery: "what are 0x4a1AfcbcC103ECcB5907fe7a6F6d8b602De98dc5 token holdings?",
   },
   {
     id: "get_nft_holdings",
     name: "NFT Holdings",
     description: "Retrieves all NFT holdings for a given address, including collection information and metadata.",
     icon: Image,
+    exampleQuery: "what are 0x4a1AfcbcC103ECcB5907fe7a6F6d8b602De98dc5 nft holdings?",
   },
   {
     id: "interpret_transaction",
     name: "Interpret Transaction",
     description: "Provides a human-readable interpretation of a blockchain transaction based on its hash.",
     icon: FileText,
+    exampleQuery: "interpret this transaction: 0xacde8eab64da9996700c64f936c8a21ad371bc1693a13961096b7933783c28c9",
   },
 ]
 
-export function ToolsPanel() {
+interface ToolsPanelProps {
+  setInputValue?: (value: string) => void
+}
+
+export function ToolsPanel({ setInputValue }: ToolsPanelProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [activeToolId, setActiveToolId] = useState<string | null>(null)
   const panelRef = useRef<HTMLDivElement>(null)
@@ -78,6 +89,14 @@ export function ToolsPanel() {
       document.removeEventListener("mousedown", handleClickOutside)
     }
   }, [isOpen])
+
+  // Handle tool click
+  const handleToolClick = (tool: Tool) => {
+    if (setInputValue) {
+      setInputValue(tool.exampleQuery)
+      setIsOpen(false)
+    }
+  }
 
   return (
     <div className="relative">
@@ -104,7 +123,7 @@ export function ToolsPanel() {
               <h3 className="text-lg font-[var(--font-space-grotesk),_var(--font-ibm-plex-mono),_sans-serif] text-white">
                 Available Tools
               </h3>
-              <p className="text-xs text-gray-400 mt-1">Hover over a tool to see its description</p>
+              <p className="text-xs text-gray-400 mt-1">Click on a tool to use it</p>
             </div>
             <div className="p-4 grid grid-cols-2 gap-3">
               {tools.map((tool) => (
@@ -113,6 +132,7 @@ export function ToolsPanel() {
                   className="relative"
                   onMouseEnter={() => setActiveToolId(tool.id)}
                   onMouseLeave={() => setActiveToolId(null)}
+                  onClick={() => handleToolClick(tool)}
                 >
                   <div className="flex flex-col items-center justify-center h-[100px] w-full p-3 rounded-xl bg-gray-900/60 border border-gray-800 hover:border-purple-500/50 transition-all duration-200 cursor-pointer">
                     <tool.icon className="w-6 h-6 text-purple-400 mb-2" />
@@ -141,7 +161,7 @@ export function ToolsPanel() {
               ))}
             </div>
             <div className="p-3 border-t border-gray-800 bg-gray-900/40">
-              <p className="text-xs text-center text-gray-400">Type the tool name in chat to use it</p>
+              <p className="text-xs text-center text-gray-400">Click a tool to paste an example query</p>
             </div>
           </motion.div>
         )}
