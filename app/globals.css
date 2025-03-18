@@ -144,6 +144,14 @@ body {
   min-height: 250px; /* Reduced min-height on mobile */
   overflow-y: auto;
   position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Add styles for the table content container */
+.transaction-table .flex-1 {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Improve scroll on iOS */
 }
 
 /* Add styles for fixed table headers */
