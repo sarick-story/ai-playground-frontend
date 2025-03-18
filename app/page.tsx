@@ -116,6 +116,15 @@ export default function Home() {
   })
   const isLoading = status === "submitted"
 
+  // Function to set input value for ToolsPanel
+  const setInputValue = (value: string) => {
+    // Create a synthetic event to pass to handleInputChange
+    const syntheticEvent = {
+      target: { value }
+    } as React.ChangeEvent<HTMLTextAreaElement>;
+    handleInputChange(syntheticEvent);
+  };
+
   // Add debugging for aiMessages
   useEffect(() => {
     console.log("AI Messages updated:", aiMessages)
@@ -475,7 +484,7 @@ export default function Home() {
               <h2 className='text-xl font-[var(--font-space-grotesk),_var(--font-ibm-plex-mono),_sans-serif] text-white'>
                 MCP Agent Playground
               </h2>
-              <ToolsPanel />
+              <ToolsPanel setInputValue={setInputValue} />
             </div>
 
             {/* MCP Server Selector Section */}
@@ -588,7 +597,9 @@ export default function Home() {
                         )?.name || "MCP"
                       }...`}
                       rows={1}
-                      className='w-full bg-transparent text-white focus:ring-0 focus:outline-none scrollbar-thin scrollbar-track-gray-900 scrollbar-thumb-gray-800 placeholder-gray-500 resize-none overflow-y-auto min-h-[48px] max-h-[200px]'
+                      autoComplete="off"
+                      data-1p-ignore="true"
+                      className="w-full bg-transparent text-white focus:ring-0 focus:outline-none scrollbar-thin scrollbar-track-gray-900 scrollbar-thumb-gray-800 placeholder-gray-500 resize-none overflow-y-auto min-h-[48px] max-h-[200px]"
                       style={{
                         lineHeight: "1.5",
                       }}
