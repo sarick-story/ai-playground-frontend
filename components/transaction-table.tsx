@@ -36,6 +36,25 @@ function formatTokenValue(value: string): string {
   return num % 1 === 0 ? num.toFixed(0) : num.toFixed(2)
 }
 
+interface TransactionItem {
+  hash?: string
+  transaction_types?: string[] | string
+  status?: string
+  timestamp: string
+  method?: string
+  value?: string
+  exchange_rate?: string
+  from?: {hash: string}
+  to?: {hash: string; name?: string}
+  decoded_input?: {
+    parameters?: Array<{
+      name: string
+      type: string
+      value: string
+    }>
+  }
+}
+
 interface Transaction {
   hash: string
   type: string
@@ -97,7 +116,7 @@ export function TransactionTable({className = ""}: TransactionTableProps) {
         throw new Error("Invalid API response format")
       }
 
-      const formattedTransactions = data.items.map((item: any) => ({
+      const formattedTransactions = data.items.map((item: TransactionItem) => ({
         hash: item.hash || "",
         // If transaction_types is an array, use the first type, otherwise use the string or default
         type:
@@ -155,10 +174,10 @@ export function TransactionTable({className = ""}: TransactionTableProps) {
     const methodMap: Record<string, string> = {
       approve: "Approve",
       transfer: "Transfer",
-      multicall: "Multi Call",
+      multicall: "Multi",
       mint: "Mint",
       commit: "Commit",
-      transferFrom: "Transfer From",
+      transferFrom: "Transfer",
     }
 
     return methodMap[method] || method.charAt(0).toUpperCase() + method.slice(1)
@@ -221,129 +240,121 @@ export function TransactionTable({className = ""}: TransactionTableProps) {
           <RefreshCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} />
         </button>
       </div>
-      <div className='flex-1 overflow-hidden'>
-        <div className='overflow-y-auto h-full custom-scrollbar'>
-          <table className='w-full table-fixed'>
-            <thead className='transaction-table-header'>
+      <div className='flex-1 overflow-auto'>
+        <table className='w-full table-fixed'>
+          <thead className='transaction-table-header'>
+            <tr>
+              <th className='w-[22%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+                Type
+              </th>
+              <th className='w-[28%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+                Hash
+              </th>
+              <th className='w-[26%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+                Amount
+              </th>
+              <th className='w-[24%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+                Time
+              </th>
+            </tr>
+          </thead>
+          <tbody className='divide-y divide-gray-800'>
+            {loading ? (
+              Array(transactionCount)
+                .fill(0)
+                .map((_, index) => (
+                  <tr key={index} className='animate-pulse'>
+                    <td colSpan={4} className='px-4 py-[21px]'>
+                      <div className='h-5 bg-gray-800 rounded' />
+                    </td>
+                  </tr>
+                ))
+            ) : error ? (
               <tr>
-                <th className='w-[20%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                  Type
-                </th>
-                <th className='w-[30%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                  Hash
-                </th>
-                <th className='w-[25%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                  Amount
-                </th>
-                <th className='w-[25%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                  Time
-                </th>
+                <td colSpan={4} className='px-4 py-4 text-center text-red-400'>
+                  {error}
+                </td>
               </tr>
-            </thead>
-            <tbody className='divide-y divide-gray-800'>
-              {loading ? (
-                Array(transactionCount)
-                  .fill(0)
-                  .map((_, index) => (
-                    <tr key={index} className='animate-pulse'>
-                      <td colSpan={4} className='px-4 py-[21px]'>
-                        <div className='h-5 bg-gray-800 rounded' />
-                      </td>
-                    </tr>
-                  ))
-              ) : error ? (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className='px-4 py-4 text-center text-red-400'
-                  >
-                    {error}
-                  </td>
-                </tr>
-              ) : transactions.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className='px-4 py-4 text-center text-gray-400'
-                  >
-                    No transactions found
-                  </td>
-                </tr>
-              ) : (
-                transactions.map((tx, index) => {
-                  // Get the appropriate amount based on transaction method
-                  const amount = getTransactionAmount(tx)
+            ) : transactions.length === 0 ? (
+              <tr>
+                <td colSpan={4} className='px-4 py-4 text-center text-gray-400'>
+                  No transactions found
+                </td>
+              </tr>
+            ) : (
+              transactions.map((tx, index) => {
+                // Get the appropriate amount based on transaction method
+                const amount = getTransactionAmount(tx)
 
-                  // Get the recipient address for display
-                  const recipient =
-                    tx.method === "approve"
-                      ? tx.decoded_input?.parameters?.find(
-                          p => p.name === "spender"
-                        )?.value
-                      : tx.to.hash
+                // Get the recipient address for display
+                const recipient =
+                  tx.method === "approve"
+                    ? tx.decoded_input?.parameters?.find(
+                        p => p.name === "spender"
+                      )?.value
+                    : tx.to.hash
 
-                  return (
-                    <tr key={tx.hash || index} className='hover:bg-gray-900/40'>
-                      <td className='px-4 py-3 text-sm truncate'>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            tx.method === "approve"
-                              ? "bg-blue-800/60 text-blue-300"
-                              : tx.method === "transfer"
-                              ? "bg-purple-800/60 text-purple-300"
-                              : tx.method === "mint"
-                              ? "bg-green-800/60 text-green-300"
-                              : tx.method === "multicall"
-                              ? "bg-yellow-800/60 text-yellow-300"
-                              : tx.method === "commit"
-                              ? "bg-orange-800/60 text-orange-300"
-                              : "bg-gray-800/60 text-gray-300"
-                          }`}
+                return (
+                  <tr key={tx.hash || index} className='hover:bg-gray-900/40'>
+                    <td className='px-2 sm:px-4 py-3 text-sm truncate'>
+                      <span
+                        className={`inline-flex items-center justify-center min-w-[60px] px-1.5 sm:px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          tx.method === "approve"
+                            ? "bg-blue-800/60 text-blue-300"
+                            : tx.method === "transfer"
+                            ? "bg-purple-800/60 text-purple-300"
+                            : tx.method === "mint"
+                            ? "bg-green-800/60 text-green-300"
+                            : tx.method === "multicall"
+                            ? "bg-yellow-800/60 text-yellow-300"
+                            : tx.method === "commit"
+                            ? "bg-orange-800/60 text-orange-300"
+                            : "bg-gray-800/60 text-gray-300"
+                        }`}
+                      >
+                        {getMethodDisplay(tx.method)}
+                      </span>
+                    </td>
+                    <td className='px-2 sm:px-4 py-3 text-sm font-mono text-gray-300 truncate'>
+                      <div className='flex space-x-1 items-center'>
+                        {truncateHash(tx.hash, 8)}
+
+                        <CopyIconButton
+                          className='ml-1 size-3'
+                          message={tx.hash}
+                        />
+                        <a
+                          href={`https://www.storyscan.xyz/tx/${tx.hash}`}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          className='text-gray-400 hover:text-white flex-shrink-0'
                         >
-                          {getMethodDisplay(tx.method)}
-                        </span>
-                      </td>
-                      <td className='px-4 py-3 text-sm font-mono text-gray-300 truncate'>
-                        <div className='flex space-x-1 items-center'>
-                          {truncateHash(tx.hash)}
-
-                          <CopyIconButton
-                            className='ml-1 size-3'
-                            message={tx.hash}
-                          />
-                          <a
-                            href={`https://www.storyscan.xyz/tx/${tx.hash}`}
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            className='text-gray-400 hover:text-white flex-shrink-0'
-                          >
-                            <ArrowUpRight className='h-3 w-3' />
-                          </a>
+                          <ArrowUpRight className='h-3 w-3' />
+                        </a>
+                      </div>
+                    </td>
+                    <td className='px-2 sm:px-4 py-3 text-sm text-gray-300 truncate'>
+                      <span className='font-medium text-purple-400 whitespace-nowrap'>
+                        {amount === "Unlimited"
+                          ? amount
+                          : formatTokenValue(amount)}{" "}
+                        {tx.to?.name || ""}
+                      </span>
+                      {tx.method === "approve" && recipient && (
+                        <div className='text-xs text-gray-500 mt-1'>
+                          Spender: {truncateHash(recipient, 8)}
                         </div>
-                      </td>
-                      <td className='px-4 py-3 text-sm text-gray-300 truncate'>
-                        <span className='font-medium text-purple-400 whitespace-nowrap'>
-                          {amount === "Unlimited"
-                            ? amount
-                            : formatTokenValue(amount)}{" "}
-                          {tx.to.name || ""}
-                        </span>
-                        {tx.method === "approve" && recipient && (
-                          <div className='text-xs text-gray-500 mt-1'>
-                            Spender: {truncateHash(recipient)}
-                          </div>
-                        )}
-                      </td>
-                      <td className='px-4 py-3 text-sm text-gray-400'>
-                        {tx.timestamp}
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                      )}
+                    </td>
+                    <td className='px-2 sm:px-4 py-3 text-sm text-gray-400'>
+                      {tx.timestamp}
+                    </td>
+                  </tr>
+                )
+              })
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   )
