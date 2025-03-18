@@ -10,7 +10,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: true,
-  swcMinify: true, // Use SWC for minification (faster than Terser)
+  // swcMinify: true, // Removed as it's no longer a valid option
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? {
       exclude: ['error', 'warn'], // Keep error and warn logs, remove all others
@@ -24,6 +24,8 @@ const nextConfig = {
       '@rainbow-me/rainbowkit',
       'wagmi',
     ],
+    // Configure Turbopack
+    turbo: {},
   },
   env: {
     // Make environment variables available to the client
