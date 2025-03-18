@@ -42,8 +42,8 @@ function generateMockResponse(messages: any[]) {
 // This is a proxy endpoint that forwards requests to the backend
 export async function POST(req: NextRequest) {
   try {
-    // Get the request body which should include messages AND conversation_id
-    const { messages, conversation_id } = await req.json();
+    // Get the request body which should include messages, conversation_id, mcp_type, and wallet_address
+    const { messages, conversation_id, mcp_type, wallet_address } = await req.json();
 
     // Use different URLs for different environments
     const backendUrl =
@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
         : process.env.BACKEND_URL || "http://localhost:8000"; // Local development
 
     console.log("Forwarding request to backend:", `${backendUrl}/api/chat`);
+    console.log(`Using MCP type: ${mcp_type || 'default'}, Wallet: ${wallet_address || 'none'}`);
 
     // Generate headers with error handling
     let headers;
@@ -70,6 +71,8 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           messages,
           conversation_id, // Use the conversation_id from the request
+          mcp_type,         // Add the MCP type
+          wallet_address    // Add the wallet address for SDK MCP
         }),
       });
 

@@ -11,7 +11,8 @@ import { MCPServerSelector, type MCPServer } from "@/components/mcp-server-selec
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import { StoryProtocolConnector } from "@/components/story-protocol-connector";
-import { useAccount } from "wagmi";
+import { useAccount, useWalletClient } from "wagmi";
+import { sepolia } from 'viem/chains';
 
 interface Message {
   id: string;
@@ -59,6 +60,24 @@ const MemoizedMarkdown = memo(
     prevProps.content === nextProps.content
 );
 
+// Create a TimestampDisplay component for client-side only rendering
+const TimestampDisplay = memo(({ timestamp }: { timestamp: Date }) => {
+  const [formattedTime, setFormattedTime] = useState<string>("");
+  
+  useEffect(() => {
+    // Format the timestamp only on the client side
+    setFormattedTime(timestamp.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    }));
+  }, [timestamp]);
+  
+  // Don't render anything until formattedTime is set (client-side only)
+  if (!formattedTime) return null;
+  
+  return <p className="text-xs opacity-70 mt-1">{formattedTime}</p>;
+});
+
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [messages, setMessages] = useState<Message[]>([
@@ -83,7 +102,11 @@ export default function Home() {
   const [resolutionLocation, setResolutionLocation] =
     useState<WebGLUniformLocation | null>(null);
   const [selectedMCPServerId, setSelectedMCPServerId] = useState<string>("storyscan");
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
+  const { data: walletClient } = useWalletClient();
+  const [pendingTransaction, setPendingTransaction] = useState<any>(null);
+  const [txStatus, setTxStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+  const [showSignModal, setShowSignModal] = useState(false);
 
   // Use Vercel AI SDK for chat
   const {
@@ -93,14 +116,89 @@ export default function Home() {
     handleSubmit,
     status,
     // isLoading,
+    setMessages: setAiMessages,
+    reload
   } = useChat({
     api: "/api/chat",
     streamProtocol: "text",
+    body: {
+      mcp_type: selectedMCPServerId,
+      wallet_address: address
+    },
+    id: `chat-${selectedMCPServerId}-${address || 'no-wallet'}`,
     onFinish: (message) => {
-      console.log("Chat finished:", message);
+      // Only log in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Chat finished with message:", message.content);
+      }
+      
+      // Check for transaction requests in the message
+      if (message.content.includes("Transaction request:")) {
+        try {
+          console.log("Transaction request detected in message");
+          
+          // Extract JSON from the message if it contains transaction data
+          // Use a more compatible approach to match multiline JSON
+          const jsonStartIndex = message.content.indexOf("```json");
+          const jsonEndIndex = message.content.indexOf("```", jsonStartIndex + 7);
+          
+          if (jsonStartIndex >= 0 && jsonEndIndex > jsonStartIndex) {
+            const jsonText = message.content.substring(jsonStartIndex + 7, jsonEndIndex).trim();
+            console.log("Extracted JSON:", jsonText);
+            
+            try {
+              const txData = JSON.parse(jsonText);
+              console.log("Parsed transaction data:", txData);
+              
+              if (txData.action === "sign_transaction") {
+                console.log("Transaction request detected:", txData);
+                
+                // Store the transaction data
+                setPendingTransaction(txData);
+                
+                // If wallet is connected, immediately trigger transaction
+                if (walletClient && address) {
+                  console.log("Wallet connected, automatically triggering transaction");
+                  
+                  // We need to get the transaction object and add the from address
+                  const tx = txData.transaction;
+                  tx.from = address;
+                  console.log("Transaction with from address:", tx);
+                  
+                  // Use a small timeout to ensure the UI updates first
+                  setTimeout(() => handleSignTransaction(), 100);
+                } else {
+                  console.log("Wallet not connected, showing transaction panel");
+                }
+              }
+            } catch (parseError) {
+              console.error("Error parsing transaction JSON:", parseError);
+            }
+          }
+        } catch (error) {
+          console.error("Error processing transaction data:", error);
+        }
+      }
     },
     onResponse: (response) => {
-      console.log("Got response:", response);
+      // Only log in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Got response");
+      }
+      
+      // Log the request details to debug the MCP type
+      if (process.env.NODE_ENV === 'development') {
+        response.clone().text().then(text => {
+          try {
+            // Try to parse as JSON to see the actual request
+            const data = JSON.parse(text);
+            console.log("Request data:", data);
+          } catch (e) {
+            console.log("Response text:", text.substring(0, 300) + "...");
+          }
+        }).catch(err => console.error("Error reading response:", err));
+      }
+      
       // Check if the response is ok
       if (!response.ok) {
         console.error("Response error:", response.status, response.statusText);
@@ -123,7 +221,9 @@ export default function Home() {
 
   // Add debugging for aiMessages
   useEffect(() => {
-    console.log("AI Messages updated:", aiMessages);
+    if (process.env.NODE_ENV === 'development') {
+      console.log("AI Messages updated");
+    }
   }, [aiMessages]);
 
   // Update our messages state when AI SDK messages change
@@ -409,9 +509,21 @@ export default function Home() {
 
   // Handle MCP server selection
   const handleMCPServerSelect = (serverId: string) => {
+    if (serverId === selectedMCPServerId) return; // Don't update if same server
+    
     setSelectedMCPServerId(serverId);
-    // You could add additional logic here to change API endpoints based on the selected server
-    console.log(`MCP Server changed to: ${serverId}`);
+    
+    // Reset the messages state for the UI
+    const welcomeMessage: Message = {
+      id: "welcome",
+      content: "Hello! How can I help you today?",
+      sender: "bot",
+      timestamp: new Date(),
+    };
+    setMessages([welcomeMessage]);
+    
+    // Reset the AI SDK messages
+    setAiMessages([]);
   };
 
   // Memoize the markdown components to prevent recreation on each render
@@ -437,6 +549,125 @@ export default function Home() {
       console.log("Wallet disconnected, reset to Storyscan MCP");
     }
   }, [isConnected, selectedMCPServerId]);
+
+  // Process messages to extract transaction requests
+  const processMessage = (message: string) => {
+    try {
+      // Check if the message contains a transaction request
+      if (message.includes('Transaction request:')) {
+        // Extract the JSON transaction request using a more compatible regex
+        // Instead of the /s flag, use [\s\S]* to match across multiple lines
+        const transactionMatch = message.match(/```json\s*([\s\S]*?)\s*```/);
+        if (transactionMatch && transactionMatch[1]) {
+          try {
+            const txRequest = JSON.parse(transactionMatch[1]);
+            console.log("Found transaction request:", txRequest);
+            setPendingTransaction(txRequest);
+            setShowSignModal(true);
+          } catch (e) {
+            console.error("Failed to parse transaction JSON:", e);
+          }
+        } else {
+          console.log("Transaction marker found but couldn't extract JSON");
+        }
+      }
+      return message;
+    } catch (error) {
+      console.error("Error processing message:", error);
+      return message;
+    }
+  };
+
+  // Handler for signing a transaction from the SDK MCP
+  const handleSignTransaction = async () => {
+    if (!pendingTransaction || !walletClient || !address) return;
+    
+    try {
+      setTxStatus('processing');
+      console.log("Transaction to sign:", pendingTransaction);
+      
+      // Ensure value is a proper hex string
+      let { transaction } = pendingTransaction;
+      
+      // Make sure we have all required fields in proper format
+      if (!transaction.to.startsWith('0x')) {
+        transaction.to = '0x' + transaction.to;
+      }
+      
+      // Ensure gas is a hex string
+      if (typeof transaction.gas === 'string' && !transaction.gas.startsWith('0x')) {
+        transaction.gas = '0x' + transaction.gas;
+      } else if (typeof transaction.gas === 'number') {
+        transaction.gas = '0x' + transaction.gas.toString(16);
+      }
+      
+      // Ensure value is a hex string
+      if (typeof transaction.value === 'string' && !transaction.value.startsWith('0x')) {
+        transaction.value = '0x' + transaction.value;
+      } else if (typeof transaction.value === 'number') {
+        transaction.value = '0x' + transaction.value.toString(16);
+      }
+      
+      console.log("Formatted transaction:", transaction);
+      
+      // Sign and send the transaction
+      const hash = await walletClient.sendTransaction({
+        to: transaction.to as `0x${string}`,
+        value: BigInt(transaction.value),
+        data: transaction.data as `0x${string}`,
+        chain: sepolia
+      });
+      
+      console.log("Transaction sent:", hash);
+      
+      // Update the chat with transaction success
+      const newMessages = [...messages];
+      newMessages.push({
+        id: Date.now().toString(),
+        content: `✅ Transaction sent successfully! Transaction hash: ${hash}`,
+        sender: "bot",
+        timestamp: new Date(),
+      });
+      setMessages(newMessages);
+      
+      setTxStatus('success');
+      setPendingTransaction(null);
+      setShowSignModal(false);
+    } catch (error) {
+      console.error("Transaction error:", error);
+      
+      // Extract error message
+      let errorMessage = "Transaction failed";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error && typeof error === 'object') {
+        errorMessage = JSON.stringify(error);
+      }
+      
+      // Update the chat with transaction error
+      const newMessages = [...messages];
+      newMessages.push({
+        id: Date.now().toString(),
+        content: `❌ Transaction failed: ${errorMessage}`,
+        sender: "bot",
+        timestamp: new Date(),
+      });
+      setMessages(newMessages);
+      
+      setTxStatus('error');
+      setPendingTransaction(null);
+      setShowSignModal(false);
+    }
+  };
+
+  // Update effect to log wallet address changes
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && address) {
+      console.log("Wallet address:", address);
+    }
+  }, [address]);
 
   return (
     <>
@@ -512,12 +743,7 @@ export default function Home() {
                       content={message.content}
                       components={markdownComponents}
                     />
-                    <p className="text-xs opacity-70 mt-1">
-                      {message.timestamp.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
+                    <TimestampDisplay timestamp={message.timestamp} />
                   </div>
 
                   {message.sender === "user" && (
@@ -619,6 +845,37 @@ export default function Home() {
           </div>
         </footer>
       </main>
+
+      {/* Transaction signing modal - only show if auto-signing fails */}
+      {showSignModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl max-w-md w-full p-6 shadow-2xl">
+            <h3 className="text-xl font-bold text-white mb-4">Sign Transaction</h3>
+            <p className="text-gray-300 mb-4">{pendingTransaction.message}</p>
+            
+            <div className="bg-black/50 p-4 rounded-lg mb-4 font-mono text-sm text-gray-300 overflow-x-auto">
+              <p>To: {pendingTransaction.transaction.to}</p>
+              <p>Value: {Number(BigInt(pendingTransaction.transaction.value)) / 1e18} IP</p>
+              <p>Gas: {parseInt(pendingTransaction.transaction.gas, 16)}</p>
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowSignModal(false)}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+              >
+                Reject
+              </button>
+              <button
+                onClick={handleSignTransaction}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors"
+              >
+                Sign Transaction
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

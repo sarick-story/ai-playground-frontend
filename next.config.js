@@ -25,7 +25,15 @@ const nextConfig = {
       'wagmi',
     ],
     // Configure Turbopack
-    turbo: {},
+    turbo: {
+      // Add rules for better turbopack performance
+      rules: {
+        // Skip type checking during development (improves speed)
+        '**/*.{ts,tsx}': {
+          globalPreventDevRule: true,
+        },
+      },
+    },
   },
   env: {
     // Make environment variables available to the client
