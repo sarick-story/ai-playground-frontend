@@ -153,23 +153,23 @@ export default function Home() {
               if (txData.action === "sign_transaction") {
                 console.log("Transaction request detected:", txData);
                 
-                // Store the transaction data
+                // Store the transaction data and show transaction modal
                 setPendingTransaction(txData);
+                setShowSignModal(true);
                 
-                // If wallet is connected, immediately trigger transaction
-                if (walletClient && address) {
-                  console.log("Wallet connected, automatically triggering transaction");
-                  
-                  // We need to get the transaction object and add the from address
-                  const tx = txData.transaction;
-                  tx.from = address;
-                  console.log("Transaction with from address:", tx);
-                  
-                  // Use a small timeout to ensure the UI updates first
-                  setTimeout(() => handleSignTransaction(), 100);
-                } else {
-                  console.log("Wallet not connected, showing transaction panel");
-                }
+                // CRITICAL: Add a user message to confirm we're showing the transaction modal
+                const newMessages = [...messages];
+                newMessages.push({
+                  id: Date.now().toString(),
+                  content: `You're being asked to sign a transaction to send ${
+                    Number(BigInt(txData.transaction.value)) / 1e18
+                  } IP to ${txData.transaction.to}`,
+                  sender: "bot",
+                  timestamp: new Date(),
+                });
+                setMessages(newMessages);
+                
+                console.log("Transaction modal should now be visible");
               }
             } catch (parseError) {
               console.error("Error parsing transaction JSON:", parseError);
@@ -580,7 +580,14 @@ export default function Home() {
 
   // Handler for signing a transaction from the SDK MCP
   const handleSignTransaction = async () => {
-    if (!pendingTransaction || !walletClient || !address) return;
+    if (!pendingTransaction || !walletClient || !address) {
+      console.error("Cannot sign transaction: Missing prerequisites", { 
+        hasPendingTx: !!pendingTransaction,
+        hasWalletClient: !!walletClient,
+        hasAddress: !!address
+      });
+      return;
+    }
     
     try {
       setTxStatus('processing');
@@ -588,6 +595,10 @@ export default function Home() {
       
       // Ensure value is a proper hex string
       let { transaction } = pendingTransaction;
+      
+      // Log the transaction details for debugging
+      const txValue = Number(BigInt(transaction.value)) / 1e18;
+      console.log(`Attempting to send ${txValue} IP to ${transaction.to}`);
       
       // Make sure we have all required fields in proper format
       if (!transaction.to.startsWith('0x')) {
@@ -610,15 +621,19 @@ export default function Home() {
       
       console.log("Formatted transaction:", transaction);
       
-      // Sign and send the transaction
-      const hash = await walletClient.sendTransaction({
+      // Create a properly formatted transaction for wagmi
+      const txParams = {
         to: transaction.to as `0x${string}`,
         value: BigInt(transaction.value),
         data: transaction.data as `0x${string}`,
-        chain: sepolia
-      });
+      };
       
-      console.log("Transaction sent:", hash);
+      console.log("Sending transaction with params:", txParams);
+      
+      // Sign and send the transaction - do NOT specify chain to use the connected chain
+      const hash = await walletClient.sendTransaction(txParams);
+      
+      console.log("Transaction sent successfully:", hash);
       
       // Update the chat with transaction success
       const newMessages = [...messages];
@@ -668,6 +683,40 @@ export default function Home() {
       console.log("Wallet address:", address);
     }
   }, [address]);
+
+  // Add debugging for wallet connection and transaction state
+  useEffect(() => {
+    // Only run in development
+    if (process.env.NODE_ENV !== 'development') return;
+    
+    // Log connection status
+    console.log("Wallet connection status:", { 
+      isConnected, 
+      address,
+      hasWalletClient: !!walletClient
+    });
+    
+    // Log transaction state whenever it changes
+    if (pendingTransaction) {
+      console.log("Transaction pending:", pendingTransaction);
+      console.log("Transaction value in ETH:", Number(BigInt(pendingTransaction.transaction.value)) / 1e18);
+    }
+  }, [isConnected, address, walletClient, pendingTransaction]);
+
+  // Track when the sign modal becomes visible
+  useEffect(() => {
+    if (showSignModal) {
+      console.log("Transaction sign modal is now VISIBLE");
+      
+      // Force focus on the Sign Transaction button for better visibility
+      const signButton = document.querySelector("[data-sign-tx-button]");
+      if (signButton) {
+        (signButton as HTMLButtonElement).focus();
+      }
+    } else {
+      console.log("Transaction sign modal is now HIDDEN");
+    }
+  }, [showSignModal]);
 
   return (
     <>
@@ -846,29 +895,47 @@ export default function Home() {
         </footer>
       </main>
 
-      {/* Transaction signing modal - only show if auto-signing fails */}
+      {/* Transaction signing modal - make it more noticeable */}
       {showSignModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl max-w-md w-full p-6 shadow-2xl">
-            <h3 className="text-xl font-bold text-white mb-4">Sign Transaction</h3>
-            <p className="text-gray-300 mb-4">{pendingTransaction.message}</p>
-            
-            <div className="bg-black/50 p-4 rounded-lg mb-4 font-mono text-sm text-gray-300 overflow-x-auto">
-              <p>To: {pendingTransaction.transaction.to}</p>
-              <p>Value: {Number(BigInt(pendingTransaction.transaction.value)) / 1e18} IP</p>
-              <p>Gas: {parseInt(pendingTransaction.transaction.gas, 16)}</p>
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-md">
+          <div className="bg-gray-900 border-2 border-purple-500 rounded-xl max-w-md w-full p-6 shadow-2xl animate-pulse-slow">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-white">Transaction Request</h3>
+              <div className="px-2 py-1 bg-yellow-600 text-white text-xs rounded-full animate-pulse">
+                Action Required
+              </div>
             </div>
             
-            <div className="flex justify-end space-x-3 mt-6">
+            <p className="text-gray-300 mb-6 text-lg">{pendingTransaction.message}</p>
+            
+            <div className="bg-black/50 p-4 rounded-lg mb-6 font-mono text-sm text-gray-300 overflow-x-auto border border-gray-700">
+              <p className="mb-2">To: <span className="text-blue-400">{pendingTransaction.transaction.to}</span></p>
+              <p className="mb-2">Amount: <span className="text-green-400 font-bold">{Number(BigInt(pendingTransaction.transaction.value)) / 1e18} IP</span></p>
+              <p>Gas: <span className="text-orange-400">{parseInt(pendingTransaction.transaction.gas, 16)}</span></p>
+            </div>
+            
+            <div className="flex justify-end space-x-4 mt-6">
               <button
-                onClick={() => setShowSignModal(false)}
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                onClick={() => {
+                  setShowSignModal(false);
+                  // Add message that transaction was rejected
+                  const newMessages = [...messages];
+                  newMessages.push({
+                    id: Date.now().toString(),
+                    content: "Transaction rejected by user",
+                    sender: "bot",
+                    timestamp: new Date(),
+                  });
+                  setMessages(newMessages);
+                }}
+                className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
               >
-                Reject
+                Reject Transaction
               </button>
               <button
                 onClick={handleSignTransaction}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors"
+                className="px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-colors font-bold"
+                data-sign-tx-button
               >
                 Sign Transaction
               </button>

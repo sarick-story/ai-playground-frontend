@@ -1,65 +1,53 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect, PropsWithChildren } from "react"
-import { useAccount, useWalletClient } from "wagmi"
-import { StoryClient, StoryConfig, aeneid } from "@story-protocol/core-sdk"
-import { custom } from "viem"
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { useAccount } from 'wagmi';
 
 // Define the context type
 type StoryContextType = {
-  storyClient: StoryClient | null
-  isReady: boolean
-}
+  walletAddress: string | undefined;
+  isWalletConnected: boolean;
+  transactionInProgress: boolean;
+  setTransactionInProgress: (inProgress: boolean) => void;
+  lastTransactionHash: string | null;
+  setLastTransactionHash: (hash: string | null) => void;
+};
 
-// Create the context with a default value
+// Create context with default values
 const StoryContext = createContext<StoryContextType>({
-  storyClient: null,
-  isReady: false,
-})
+  walletAddress: undefined,
+  isWalletConnected: false,
+  transactionInProgress: false,
+  setTransactionInProgress: () => {},
+  lastTransactionHash: null,
+  setLastTransactionHash: () => {},
+});
 
-// Export the hook for consuming the context
-export const useStory = () => useContext(StoryContext)
+// Hook to use the Story context
+export const useStory = () => useContext(StoryContext);
 
 // Provider component
-export function StoryProvider({ children }: PropsWithChildren) {
-  const [storyClient, setStoryClient] = useState<StoryClient | null>(null)
-  const [isReady, setIsReady] = useState(false)
+export const StoryProvider = ({ children }: { children: ReactNode }) => {
+  // Use wagmi hooks for wallet state
+  const { address, isConnected } = useAccount();
   
-  const { isConnected, address } = useAccount()
-  const { data: walletClient } = useWalletClient()
-
-  useEffect(() => {
-    const setupStoryClient = async () => {
-      try {
-        if (isConnected && walletClient && address) {
-          // Setup Story Client
-          const config: StoryConfig = {
-            wallet: walletClient,
-            transport: custom(walletClient.transport),
-            chainId: "aeneid",
-          }
-          
-          const client = StoryClient.newClient(config)
-          setStoryClient(client)
-          setIsReady(true)
-          console.log("Story client initialized successfully")
-        } else {
-          setStoryClient(null)
-          setIsReady(false)
-        }
-      } catch (error) {
-        console.error("Error setting up Story client:", error)
-        setStoryClient(null)
-        setIsReady(false)
-      }
-    }
-
-    setupStoryClient()
-  }, [isConnected, walletClient, address])
-
+  // Transaction state
+  const [transactionInProgress, setTransactionInProgress] = useState(false);
+  const [lastTransactionHash, setLastTransactionHash] = useState<string | null>(null);
+  
+  // Context value
+  const value = {
+    walletAddress: address,
+    isWalletConnected: isConnected,
+    transactionInProgress,
+    setTransactionInProgress,
+    lastTransactionHash,
+    setLastTransactionHash,
+  };
+  
   return (
-    <StoryContext.Provider value={{ storyClient, isReady }}>
+    <StoryContext.Provider value={value}>
       {children}
     </StoryContext.Provider>
-  )
-} 
+  );
+}; 

@@ -31,8 +31,9 @@ const nextConfig = {
         // Skip type checking during development (improves speed)
         '**/*.{ts,tsx}': {
           globalPreventDevRule: true,
-        },
-      },
+          loaders: []
+        }
+      }
     },
   },
   env: {
