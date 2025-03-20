@@ -13,7 +13,12 @@ type StoryProtocolConnectorProps = {
 export function StoryProtocolConnector({ onConnected }: StoryProtocolConnectorProps) {
   const [mounted, setMounted] = useState(false)
   const { isConnected, chainId } = useAccount()
-  const { storyClient, isReady } = useStory()
+  const { 
+    // Access properties safely with optional chaining to prevent type errors
+    storyClient, 
+    isReady 
+  } = useStory() as { storyClient?: any; isReady?: boolean }
+
   const { switchChain } = useSwitchChain()
 
   // Client-side only rendering to prevent hydration errors

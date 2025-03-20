@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 
 // Define the context type
@@ -11,6 +11,8 @@ type StoryContextType = {
   setTransactionInProgress: (inProgress: boolean) => void;
   lastTransactionHash: string | null;
   setLastTransactionHash: (hash: string | null) => void;
+  storyClient: any | null;
+  isReady: boolean;
 };
 
 // Create context with default values
@@ -21,6 +23,8 @@ const StoryContext = createContext<StoryContextType>({
   setTransactionInProgress: () => {},
   lastTransactionHash: null,
   setLastTransactionHash: () => {},
+  storyClient: null,
+  isReady: false,
 });
 
 // Hook to use the Story context
@@ -34,6 +38,20 @@ export const StoryProvider = ({ children }: { children: ReactNode }) => {
   // Transaction state
   const [transactionInProgress, setTransactionInProgress] = useState(false);
   const [lastTransactionHash, setLastTransactionHash] = useState<string | null>(null);
+  const [storyClient, setStoryClient] = useState<any | null>(null);
+  const [isReady, setIsReady] = useState(false);
+  
+  // Initialize Story client when wallet is connected
+  useEffect(() => {
+    if (isConnected && address) {
+      // For now, we'll just set isReady to true when wallet is connected
+      // In a real implementation, you would initialize the actual client here
+      setIsReady(true);
+    } else {
+      setIsReady(false);
+      setStoryClient(null);
+    }
+  }, [isConnected, address]);
   
   // Context value
   const value = {
@@ -43,6 +61,8 @@ export const StoryProvider = ({ children }: { children: ReactNode }) => {
     setTransactionInProgress,
     lastTransactionHash,
     setLastTransactionHash,
+    storyClient,
+    isReady,
   };
   
   return (

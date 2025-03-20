@@ -10,9 +10,8 @@ import { ToolsPanel } from "@/components/tools-panel";
 import { MCPServerSelector, type MCPServer } from "@/components/mcp-server-selector";
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
-import { StoryProtocolConnector } from "@/components/story-protocol-connector";
 import { useAccount, useWalletClient } from "wagmi";
-import { sepolia } from 'viem/chains';
+import { parseEther } from 'viem';
 
 interface Message {
   id: string;
@@ -107,8 +106,17 @@ export default function Home() {
   const [pendingTransaction, setPendingTransaction] = useState<any>(null);
   const [txStatus, setTxStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [showSignModal, setShowSignModal] = useState(false);
+  const [privateKey, setPrivateKey] = useState<string>("");
 
   // Use Vercel AI SDK for chat
+  useEffect(() => {
+    if (address) {
+      console.log("Connected wallet address:", address);
+    } else {
+      console.log("No wallet connected");
+    }
+  }, [address]);
+
   const {
     messages: aiMessages,
     input: aiInput,
@@ -117,73 +125,302 @@ export default function Home() {
     status,
     // isLoading,
     setMessages: setAiMessages,
-    reload
+    reload,
   } = useChat({
     api: "/api/chat",
-    streamProtocol: "text",
     body: {
       mcp_type: selectedMCPServerId,
-      wallet_address: address
+      wallet_address: isConnected ? address : undefined
     },
     id: `chat-${selectedMCPServerId}-${address || 'no-wallet'}`,
+    onError: (error) => {
+      console.error("Chat error:", error);
+      
+      // Check if this is a special error from Vercel AI SDK that might be caused by a JSON response
+      if (error.message?.includes("Failed to parse stream")) {
+        console.log("Stream parse error detected - this might be a transaction response");
+        
+        // Make a direct API call to get the JSON data
+        fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            messages: [{role: "user", content: aiInput}],
+            mcp_type: selectedMCPServerId,
+            wallet_address: address
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log("Direct API call response:", data);
+          if (data.is_transaction) {
+            // Process transaction directly
+            fetch("/api/transaction", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                to_address: data.transaction_details.to_address,
+                amount: data.transaction_details.amount,
+                wallet_address: data.transaction_details.wallet_address
+              }),
+            })
+            .then(response => response.json())
+            .then(txData => {
+              // Create transaction data format for wagmi
+              const wagmiTxData = {
+                transaction: {
+                  to: txData.transaction.to,
+                  value: parseEther(txData.transaction.value),
+                  data: txData.transaction.data || '0x',
+                  gas: txData.transaction.gas
+                },
+                message: txData.message
+              };
+              
+              // Store the transaction data and show transaction modal
+              setPendingTransaction(wagmiTxData);
+              setShowSignModal(true);
+              
+              // Add the message to the chat
+              const newMessages = [...messages];
+              newMessages.push({
+                id: Date.now().toString(),
+                content: data.message,
+                sender: "bot",
+                timestamp: new Date(),
+              });
+              setMessages(newMessages);
+            })
+            .catch(err => {
+              console.error("Transaction processing error:", err);
+            });
+          }
+        })
+        .catch(err => {
+          console.error("Failed to get direct API data:", err);
+        });
+      }
+    },
     onFinish: (message) => {
       // Only log in development
       if (process.env.NODE_ENV === 'development') {
         console.log("Chat finished with message:", message.content);
       }
       
-      // Check for transaction requests in the message
-      if (message.content.includes("Transaction request:")) {
+      // Special handling for Storyscan MCP transaction responses
+      if (selectedMCPServerId === "storyscan" && 
+          message.content.toLowerCase().includes("sorry") && 
+          (message.content.toLowerCase().includes("send") || message.content.toLowerCase().includes("transaction"))) {
+        console.log("Detected Storyscan response about transactions:", message);
+        
+        // Make sure this message appears in our local messages state
+        const messageExists = messages.some(msg => msg.content === message.content);
+        if (!messageExists) {
+          const newMessages = [...messages];
+          newMessages.push({
+            id: Date.now().toString(),
+            content: message.content,
+            sender: "bot",
+            timestamp: new Date(),
+          });
+          setMessages(newMessages);
+        }
+      }
+      
+      // Continue with the regular transaction intent detection
+      console.log("Checking for transaction intent in message");
+      if (message.content.includes("Transaction intent:") || message.content.includes("Transaction request:")) {
         try {
-          console.log("Transaction request detected in message");
+          console.log("Transaction intent detected in message. Full content:", message.content);
           
           // Extract JSON from the message if it contains transaction data
-          // Use a more compatible approach to match multiline JSON
+          // Look for transaction data between ```json and ``` markers
           const jsonStartIndex = message.content.indexOf("```json");
           const jsonEndIndex = message.content.indexOf("```", jsonStartIndex + 7);
           
           if (jsonStartIndex >= 0 && jsonEndIndex > jsonStartIndex) {
             const jsonText = message.content.substring(jsonStartIndex + 7, jsonEndIndex).trim();
-            console.log("Extracted JSON:", jsonText);
+            console.log("Extracted transaction JSON:", jsonText);
             
             try {
               const txData = JSON.parse(jsonText);
               console.log("Parsed transaction data:", txData);
               
-              if (txData.action === "sign_transaction") {
+              // Handle direct transaction intent from SDK MCP
+              if (txData.to && txData.amount && typeof txData.amount === 'string') {
+                console.log("Direct transaction intent detected:", txData);
+                
+                // Instead of parsing from the stream, make a direct API call
+                fetch("/api/transaction", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    to_address: txData.to,
+                    amount: txData.amount,
+                    wallet_address: address,
+                    // Include private key if it exists (normally this should be handled securely)
+                    ...(privateKey && { private_key: privateKey })
+                  }),
+                })
+                .then(response => {
+                  if (!response.ok) {
+                    // Log the full response for debugging
+                    return response.text().then(text => {
+                      console.error(`Transaction API error (${response.status}):`, text);
+                      throw new Error(`Transaction API error: ${response.status} - ${text}`);
+                    });
+                  }
+                  return response.json();
+                })
+                .then(formattedTxData => {
+                  console.log("Received formatted transaction data:", formattedTxData);
+                  
+                  // Create transaction data format for wagmi
+                  const wagmiTxData = {
+                    transaction: {
+                      to: formattedTxData.transaction.to,
+                      value: parseEther(formattedTxData.transaction.value),
+                      data: formattedTxData.transaction.data || '0x',
+                    },
+                    message: formattedTxData.message
+                  };
+                  
+                  console.log("Formatted wagmi transaction data:", wagmiTxData);
+                  
+                  // Store the transaction data and show transaction modal
+                  setPendingTransaction(wagmiTxData);
+                  setShowSignModal(true);
+                  
+                  console.log("Set showSignModal to true. Current state:", {pendingTransaction: wagmiTxData, showSignModal: true});
+                })
+                .catch(error => {
+                  console.error("Error processing transaction:", error);
+                  // Add error message to chat
+                  const newMessages = [...messages];
+                  newMessages.push({
+                    id: Date.now().toString(),
+                    content: `❌ Error preparing transaction: ${error.message}`,
+                    sender: "bot",
+                    timestamp: new Date(),
+                  });
+                  setMessages(newMessages);
+                });
+              }
+              // Handle transaction request with action field
+              else if (txData.action === "sign_transaction") {
                 console.log("Transaction request detected:", txData);
                 
                 // Store the transaction data and show transaction modal
                 setPendingTransaction(txData);
                 setShowSignModal(true);
                 
-                // CRITICAL: Add a user message to confirm we're showing the transaction modal
-                const newMessages = [...messages];
-                newMessages.push({
-                  id: Date.now().toString(),
-                  content: `You're being asked to sign a transaction to send ${
-                    Number(BigInt(txData.transaction.value)) / 1e18
-                  } IP to ${txData.transaction.to}`,
-                  sender: "bot",
-                  timestamp: new Date(),
-                });
-                setMessages(newMessages);
-                
                 console.log("Transaction modal should now be visible");
+              } else {
+                console.warn("Transaction data format not recognized:", txData);
               }
             } catch (parseError) {
               console.error("Error parsing transaction JSON:", parseError);
             }
+          } else {
+            console.warn("Could not locate JSON data between ```json``` markers. Start index:", jsonStartIndex, "End index:", jsonEndIndex);
           }
         } catch (error) {
           console.error("Error processing transaction data:", error);
         }
+      } else {
+        console.log("No transaction intent found in message");
       }
     },
-    onResponse: (response) => {
+    onResponse: async (response) => {
       // Only log in development
       if (process.env.NODE_ENV === 'development') {
         console.log("Got response");
+      }
+      
+      // Check if the response is a transaction response
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        // This is a JSON response, not a streaming response
+        console.log("Received JSON response, likely a transaction");
+        try {
+          const jsonData = await response.clone().json();
+          if (jsonData.is_transaction) {
+            console.log("Transaction detected in JSON response:", jsonData);
+            
+            // Call the transaction endpoint to format the transaction for wagmi
+            const txDetails = jsonData.transaction_details;
+            fetch("/api/transaction", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                to_address: txDetails.to_address,
+                amount: txDetails.amount,
+                wallet_address: txDetails.wallet_address,
+                ...(privateKey && { private_key: privateKey })
+              }),
+            })
+            .then(response => {
+              if (!response.ok) {
+                return response.text().then(text => {
+                  console.error(`Transaction API error (${response.status}):`, text);
+                  throw new Error(`Transaction API error: ${response.status} - ${text}`);
+                });
+              }
+              return response.json();
+            })
+            .then(formattedTxData => {
+              console.log("Received formatted transaction data:", formattedTxData);
+              
+              // Create transaction data format for wagmi
+              const wagmiTxData = {
+                transaction: {
+                  to: formattedTxData.transaction.to,
+                  value: parseEther(formattedTxData.transaction.value),
+                  data: formattedTxData.transaction.data || '0x',
+                },
+                message: formattedTxData.message
+              };
+              
+              console.log("Formatted wagmi transaction data:", wagmiTxData);
+              
+              // Store the transaction data and show transaction modal
+              setPendingTransaction(wagmiTxData);
+              setShowSignModal(true);
+              
+              // Add transaction message to chat
+              const newMessages = [...messages];
+              newMessages.push({
+                id: Date.now().toString(),
+                content: jsonData.message,
+                sender: "bot",
+                timestamp: new Date(),
+              });
+              setMessages(newMessages);
+            })
+            .catch(error => {
+              console.error("Error processing transaction:", error);
+              // Add error message to chat
+              const newMessages = [...messages];
+              newMessages.push({
+                id: Date.now().toString(),
+                content: `❌ Error preparing transaction: ${error.message}`,
+                sender: "bot",
+                timestamp: new Date(),
+              });
+              setMessages(newMessages);
+            });
+          }
+        } catch (error) {
+          console.error("Error parsing response as JSON:", error);
+        }
       }
       
       // Log the request details to debug the MCP type
@@ -204,9 +441,6 @@ export default function Home() {
         console.error("Response error:", response.status, response.statusText);
       }
     },
-    onError: (error) => {
-      console.error("Chat error:", error);
-    },
   });
   const isLoading = status === "submitted";
 
@@ -222,7 +456,12 @@ export default function Home() {
   // Add debugging for aiMessages
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log("AI Messages updated");
+      console.log("AI Messages updated", aiMessages);
+      
+      // Log message content for debugging
+      if (aiMessages.length > 0) {
+        console.log("Latest AI message content:", aiMessages[aiMessages.length - 1].content);
+      }
     }
   }, [aiMessages]);
 
@@ -247,6 +486,9 @@ export default function Home() {
       // Check if there's already a welcome message in the mapped messages
       const hasWelcomeInNew = newMessages.some((msg) => msg.id === "welcome");
 
+      // For debugging
+      console.log("Updating messages state with", newMessages.length, "messages");
+      
       if (!hasWelcomeInNew) {
         // Add the welcome message at the beginning if it's not already there
         setMessages([welcomeMessage, ...(newMessages as Message[])]);
@@ -717,6 +959,34 @@ export default function Home() {
       console.log("Transaction sign modal is now HIDDEN");
     }
   }, [showSignModal]);
+
+  // Add this new useEffect to ensure Storyscan responses are visible
+  useEffect(() => {
+    // For Storyscan MCP, double-check we're displaying all messages
+    if (selectedMCPServerId === "storyscan" && aiMessages.length > 0) {
+      const assistantMessages = aiMessages.filter(msg => msg.role === "assistant");
+      if (assistantMessages.length > 0) {
+        // Check if the latest assistant message is displayed in our UI
+        const latestAssistantMsg = assistantMessages[assistantMessages.length - 1];
+        const messageDisplayed = messages.some(msg => 
+          msg.content === latestAssistantMsg.content && msg.sender === "bot"
+        );
+        
+        // If not displayed, add it
+        if (!messageDisplayed && latestAssistantMsg.content.trim()) {
+          console.log("Adding missing Storyscan message to UI:", latestAssistantMsg.content);
+          const newMessages = [...messages];
+          newMessages.push({
+            id: Date.now().toString(),
+            content: latestAssistantMsg.content,
+            sender: "bot",
+            timestamp: new Date(),
+          });
+          setMessages(newMessages);
+        }
+      }
+    }
+  }, [aiMessages, messages, selectedMCPServerId]);
 
   return (
     <>
