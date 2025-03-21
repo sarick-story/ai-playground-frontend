@@ -46,16 +46,9 @@ interface MemoizedMarkdownProps {
 // Create a memoized markdown component to prevent unnecessary re-renders
 const MemoizedMarkdown = memo(
   ({content, components}: MemoizedMarkdownProps) => (
-    <div className='markdown-tight w-full prose dark:prose-invert max-w-none'>
+    <div className='markdown-tight w-full'>
       <ReactMarkdown
-        components={{
-          ...components,
-          strong: ({node, ...props}) => <span className="font-bold" {...props} />,
-          h1: ({node, ...props}) => <h1 className="text-2xl font-bold mb-4" {...props} />,
-          h2: ({node, ...props}) => <h2 className="text-xl font-bold mb-3" {...props} />,
-          ul: ({node, ...props}) => <ul className="list-disc pl-4 mb-4" {...props} />,
-          li: ({node, ...props}) => <li className="mb-1" {...props} />,
-        }}
+        components={components}
         remarkPlugins={[remarkGfm, remarkBreaks]}
       >
         {content}
@@ -149,97 +142,6 @@ export default function Home() {
       if (process.env.NODE_ENV === 'development') {
         console.log("Chat finished with message:", message.content);
       }
-      
-      // Only check for transaction intents in SDK MCP responses
-      if (selectedMCPServerId === "sdk") {
-        console.log("Checking for transaction intent in SDK MCP message");
-        if (message.content.includes("Transaction intent:") || message.content.includes("Transaction request:")) {
-          try {
-            console.log("Transaction intent detected in message. Full content:", message.content);
-            
-            // Extract JSON from the message if it contains transaction data
-            // Look for transaction data between ```json and ``` markers
-            const jsonStartIndex = message.content.indexOf("```json");
-            const jsonEndIndex = message.content.indexOf("```", jsonStartIndex + 7);
-            
-            if (jsonStartIndex >= 0 && jsonEndIndex > jsonStartIndex) {
-              const jsonText = message.content.substring(jsonStartIndex + 7, jsonEndIndex).trim();
-              console.log("Extracted transaction JSON:", jsonText);
-              
-              try {
-                const txData = JSON.parse(jsonText);
-                console.log("Parsed transaction data:", txData);
-                
-                // Handle direct transaction intent from SDK MCP
-                if (txData.to && txData.amount && typeof txData.amount === 'string') {
-                  console.log("Direct transaction intent detected:", txData);
-                  
-                  // Make a direct API call to the transaction endpoint
-                  fetch("/api/transaction", {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                      to_address: txData.to,
-                      amount: txData.amount,
-                      wallet_address: address,
-                      // Include private key if it exists (normally this should be handled securely)
-                      ...(privateKey && { private_key: privateKey })
-                    }),
-                  })
-                  .then(response => {
-                    if (!response.ok) {
-                      // Log the full response for debugging
-                      return response.text().then(text => {
-                        console.error(`Transaction API error (${response.status}):`, text);
-                        throw new Error(`Transaction API error: ${response.status} - ${text}`);
-                      });
-                    }
-                    return response.json();
-                  })
-                  .then(formattedTxData => {
-                    console.log("Received formatted transaction data:", formattedTxData);
-                    
-                    // Create transaction data format for wagmi
-                    const wagmiTxData = {
-                      transaction: {
-                        to: formattedTxData.transaction.to,
-                        value: parseEther(formattedTxData.transaction.value),
-                        data: formattedTxData.transaction.data || '0x',
-                        gas: formattedTxData.transaction.gas,
-                      },
-                      message: formattedTxData.message
-                    };
-                    
-                    console.log("Formatted wagmi transaction data:", wagmiTxData);
-                    
-                    // Store the transaction data and show transaction modal
-                    setPendingTransaction(wagmiTxData);
-                    setShowSignModal(true);
-                  })
-                  .catch(error => {
-                    console.error("Error processing transaction:", error);
-                    // Add error message to chat
-                    const newMessages = [...messages];
-                    newMessages.push({
-                      id: Date.now().toString(),
-                      content: `❌ Error preparing transaction: ${error.message}`,
-                      sender: "bot",
-                      timestamp: new Date(),
-                    });
-                    setMessages(newMessages);
-                  });
-                }
-              } catch (parseError) {
-                console.error("Error parsing transaction JSON:", parseError);
-              }
-            }
-          } catch (error) {
-            console.error("Error processing transaction data:", error);
-          }
-        }
-      }
     },
     onResponse: async (response) => {
       // Only log in development
@@ -247,43 +149,38 @@ export default function Home() {
         console.log("Got response from backend");
       }
       
-      // Check if the response is a transaction response
+      // Check response content type to determine if it's a transaction or regular response
       const contentType = response.headers.get('content-type');
+      
+      // Handle JSON responses (transaction intents)
       if (contentType && contentType.includes('application/json')) {
-        // This is a JSON response, not a streaming response
-        console.log("Received JSON response, likely a transaction");
+        console.log("Received JSON response, processing as transaction");
         try {
           const jsonData = await response.clone().json();
           if (jsonData.is_transaction) {
-            console.log("Transaction detected in JSON response:", jsonData);
+            console.log("Transaction detected:", jsonData);
             
-            // Call the transaction endpoint to format the transaction for wagmi
-            const txDetails = jsonData.transaction_details;
+            // Call transaction endpoint to format the transaction for wagmi
             fetch("/api/transaction", {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                to_address: txDetails.to_address,
-                amount: txDetails.amount,
-                wallet_address: txDetails.wallet_address,
+                to_address: jsonData.transaction_details.to_address,
+                amount: jsonData.transaction_details.amount,
+                wallet_address: jsonData.transaction_details.wallet_address,
                 ...(privateKey && { private_key: privateKey })
               }),
             })
             .then(response => {
               if (!response.ok) {
                 return response.text().then(text => {
-                  console.error(`Transaction API error (${response.status}):`, text);
                   throw new Error(`Transaction API error: ${response.status} - ${text}`);
                 });
               }
               return response.json();
             })
             .then(formattedTxData => {
-              console.log("Received formatted transaction data:", formattedTxData);
-              
-              // Create transaction data format for wagmi
+              // Format for wagmi
               const wagmiTxData = {
                 transaction: {
                   to: formattedTxData.transaction.to,
@@ -294,41 +191,42 @@ export default function Home() {
                 message: formattedTxData.message
               };
               
-              console.log("Formatted wagmi transaction data:", wagmiTxData);
-              
-              // Store the transaction data and show transaction modal
+              // Set transaction data and show modal
               setPendingTransaction(wagmiTxData);
               setShowSignModal(true);
               
               // Add transaction message to chat
-              const newMessages = [...messages];
-              newMessages.push({
+              setMessages([...messages, {
                 id: Date.now().toString(),
                 content: jsonData.message,
                 sender: "bot",
                 timestamp: new Date(),
-              });
-              setMessages(newMessages);
+              }]);
             })
             .catch(error => {
               console.error("Error processing transaction:", error);
-              // Add error message to chat
-              const newMessages = [...messages];
-              newMessages.push({
+              setMessages([...messages, {
                 id: Date.now().toString(),
                 content: `❌ Error preparing transaction: ${error.message}`,
                 sender: "bot",
                 timestamp: new Date(),
-              });
-              setMessages(newMessages);
+              }]);
             });
+            
+            // Prevent the default Vercel AI SDK handling since we're handling this JSON response manually
+            throw new Error("IGNORE_STREAM_RESPONSE");
           }
-        } catch (error) {
-          console.error("Error parsing response as JSON:", error);
+        } catch (error: any) {
+          if (error.message === "IGNORE_STREAM_RESPONSE") {
+            // This is our custom control flow, not an actual error
+            console.log("Skipping stream handling for JSON response");
+          } else {
+            console.error("Error parsing response as JSON:", error);
+          }
         }
       }
       
-      // Check if the response is ok
+      // Non-JSON responses continue with normal stream handling
       if (!response.ok) {
         console.error("Response error:", response.status, response.statusText);
       }
@@ -336,16 +234,14 @@ export default function Home() {
     onError: (error) => {
       console.error("Chat error:", error);
       
-      // Check if this is a special error from Vercel AI SDK that might be caused by a JSON response
+      // Handle special Vercel AI SDK errors that might be from JSON responses
       if (error.message?.includes("Failed to parse stream")) {
         console.log("Stream parse error detected - this might be a transaction response");
         
         // Make a direct API call to get the JSON data
         fetch("/api/chat", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             messages: [{role: "user", content: aiInput}],
             mcp_type: selectedMCPServerId,
@@ -354,23 +250,20 @@ export default function Home() {
         })
         .then(response => response.json())
         .then(data => {
-          console.log("Direct API call response:", data);
           if (data.is_transaction) {
             // Process transaction directly
             fetch("/api/transaction", {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 to_address: data.transaction_details.to_address,
                 amount: data.transaction_details.amount,
-                wallet_address: data.transaction_details.wallet_address
+                wallet_address: data.transaction_details.wallet_address,
+                ...(privateKey && { private_key: privateKey })
               }),
             })
             .then(response => response.json())
             .then(txData => {
-              // Create transaction data format for wagmi
               const wagmiTxData = {
                 transaction: {
                   to: txData.transaction.to,
@@ -381,31 +274,24 @@ export default function Home() {
                 message: txData.message
               };
               
-              // Store the transaction data and show transaction modal
               setPendingTransaction(wagmiTxData);
               setShowSignModal(true);
               
-              // Add the message to the chat
-              const newMessages = [...messages];
-              newMessages.push({
+              setMessages([...messages, {
                 id: Date.now().toString(),
                 content: data.message,
                 sender: "bot",
                 timestamp: new Date(),
-              });
-              setMessages(newMessages);
+              }]);
             })
             .catch(err => {
               console.error("Transaction processing error:", err);
-              // Add error message to chat
-              const newMessages = [...messages];
-              newMessages.push({
+              setMessages([...messages, {
                 id: Date.now().toString(),
                 content: `❌ Error preparing transaction: ${err.message}`,
                 sender: "bot", 
                 timestamp: new Date(),
-              });
-              setMessages(newMessages);
+              }]);
             });
           }
         })
@@ -737,19 +623,41 @@ export default function Home() {
   };
 
   // Memoize the markdown components to prevent recreation on each render
-  const markdownComponents = useMemo<Components>(() => ({
-    p: ({ node, ...props }) => <p className="break-words my-0 w-full" {...props} />,
-    pre: ({ node, ...props }) => <pre className="break-words whitespace-pre-wrap bg-gray-900/50 p-1.5 rounded my-1 w-full" {...props} />,
-    code: ({ node, ...props }) => <code className="break-words font-mono bg-gray-900/30 px-1 py-0.5 rounded" {...props} />,
-    ul: ({ node, ...props }) => <ul className="my-0.5 w-full" {...props} />,
-    ol: ({ node, ...props }) => <ol className="list-decimal pl-4 my-0.5 w-full" {...props} />,
-    li: ({ node, ...props }) => <li className="my-0 w-full" {...props} />,
-    h1: ({ node, ...props }) => <h1 className="text-xl font-bold my-0.5 w-full" {...props} />,
-    h2: ({ node, ...props }) => <h2 className="text-lg font-bold my-0.5 w-full" {...props} />,
-    h3: ({ node, ...props }) => <h3 className="text-base font-bold my-0.5 w-full" {...props} />,
-    // Add specific handling for line breaks
-    br: ({ node, ...props }) => <br className="my-0" {...props} />,
-  }), []);
+  const markdownComponents = useMemo<Components>(
+    () => ({
+      p: ({...props}) => <p className='break-words my-0 w-full' {...props} />,
+      pre: ({...props}) => (
+        <pre
+          className='break-words whitespace-pre-wrap bg-gray-900/50 p-1.5 rounded my-1 w-full'
+          {...props}
+        />
+      ),
+      code: ({...props}) => (
+        <code
+          className='break-words font-mono bg-gray-900/30 px-1 py-0.5 rounded'
+          {...props}
+        />
+      ),
+      ul: ({...props}) => <ul className='my-0.5 w-full' {...props} />,
+      ol: ({...props}) => (
+        <ol className='list-decimal pl-4 my-0.5 w-full' {...props} />
+      ),
+      li: ({...props}) => <li className='my-0 w-full' {...props} />,
+      h1: ({...props}) => (
+        <h1 className='text-xl font-bold my-0.5 w-full' {...props} />
+      ),
+      h2: ({...props}) => (
+        <h2 className='text-lg font-bold my-0.5 w-full' {...props} />
+      ),
+      h3: ({...props}) => (
+        <h3 className='text-base font-bold my-0.5 w-full' {...props} />
+      ),
+      // Add specific handling for line breaks
+      br: ({...props}) => <br className='my-0' {...props} />,
+      strong: ({...props}) => <strong className="font-bold" {...props} />
+    }),
+    []
+  )
 
   // Add a useEffect to handle wallet disconnection
   useEffect(() => {
@@ -930,58 +838,58 @@ export default function Home() {
 
   return (
     <>
-      <canvas ref={canvasRef} className="fixed inset-0 -z-10" />
-      <main className="main-container pt-8">
-        <div className="flex justify-center mb-8">
+      <canvas ref={canvasRef} className='fixed inset-0 -z-10' />
+      <main className='main-container pt-8'>
+        <div className='flex justify-center mb-8'>
           <svg
-            className="h-16 w-auto text-white"
-            viewBox="0 0 398.4 91.4"
-            fill="currentColor"
+            className='h-16 w-auto text-white'
+            viewBox='0 0 398.4 91.4'
+            fill='currentColor'
           >
-            <path d="M352.2,89.7h18.4V52.8l27.7-50.2h-21.2l-24.9,46.5V89.7z" />
-            <path d="M357.4,40.9L336.6,2.6h-20.9l20.9,38.3H357.4z" />
-            <path d="M286.3,62.6l14.1,27.1h20l-17.6-32c8.1-5.6,12.9-14.6,12.9-24.9c0-16.8-10.5-30.1-33.1-30.1h-36.2v87.1h19.1V62.8 L286.3,62.6z M265.5,18.7h17.2c9.3,0,14.8,4.9,14.8,13.8c0,9-4.9,13.3-14.2,13.3h-17.8V18.7z" />
-            <path d="M100.9,89.7h19.3V19.8H148V2.6H73.1v17.2h27.8V89.7z" />
-            <path d="M34.9,30.2v13.3c-9.8,0-16.9-4.2-16.9-13c0-8.8,6.2-14,17.4-14c9.2,0,14.8,3.8,16.1,8.8h17C67.3,11.3,54.1,0,35,0 C14.9,0,0.6,12.5,0.6,30.9S15.5,60.1,35,60.1V47.6c10.3,0,17.4,4.6,17.4,13.6c0,9-7.3,14-17.3,14c-9.1,0-15.4-4-17.3-9.5H0 c2.5,14.5,15.8,25.8,35,25.8c19.2,0,34.7-11.5,34.7-30.7C69.6,42.8,56.1,30.2,34.9,30.2z" />
-            <path d="M192.9,73.9c-15.4,0-26.6-12.8-26.6-28.1c0-16.7,9.9-27.7,26.6-27.7c15.4,0,27.4,11.8,27.4,27.7h17.3 c0-24.8-19.3-45.7-44.7-45.7C165.6,0,148,19,148,45.7c0,24.8,19.5,45.7,44.9,45.7V73.9z" />
-            <path d="M192.4,81c19.4,0,34-15.3,34-35.7h-15.8c0,11-8,19-18.1,19V81z" />
+            <path d='M352.2,89.7h18.4V52.8l27.7-50.2h-21.2l-24.9,46.5V89.7z' />
+            <path d='M357.4,40.9L336.6,2.6h-20.9l20.9,38.3H357.4z' />
+            <path d='M286.3,62.6l14.1,27.1h20l-17.6-32c8.1-5.6,12.9-14.6,12.9-24.9c0-16.8-10.5-30.1-33.1-30.1h-36.2v87.1h19.1V62.8 L286.3,62.6z M265.5,18.7h17.2c9.3,0,14.8,4.9,14.8,13.8c0,9-4.9,13.3-14.2,13.3h-17.8V18.7z' />
+            <path d='M100.9,89.7h19.3V19.8H148V2.6H73.1v17.2h27.8V89.7z' />
+            <path d='M34.9,30.2v13.3c-9.8,0-16.9-4.2-16.9-13c0-8.8,6.2-14,17.4-14c9.2,0,14.8,3.8,16.1,8.8h17C67.3,11.3,54.1,0,35,0 C14.9,0,0.6,12.5,0.6,30.9S15.5,60.1,35,60.1V47.6c10.3,0,17.4,4.6,17.4,13.6c0,9-7.3,14-17.3,14c-9.1,0-15.4-4-17.3-9.5H0 c2.5,14.5,15.8,25.8,35,25.8c19.2,0,34.7-11.5,34.7-30.7C69.6,42.8,56.1,30.2,34.9,30.2z' />
+            <path d='M192.9,73.9c-15.4,0-26.6-12.8-26.6-28.1c0-16.7,9.9-27.7,26.6-27.7c15.4,0,27.4,11.8,27.4,27.7h17.3 c0-24.8-19.3-45.7-44.7-45.7C165.6,0,148,19,148,45.7c0,24.8,19.5,45.7,44.9,45.7V73.9z' />
+            <path d='M192.4,81c19.4,0,34-15.3,34-35.7h-15.8c0,11-8,19-18.1,19V81z' />
           </svg>
         </div>
-        <div className="container content-container">
-          <div className="left-column w-full lg:w-[550px] flex flex-col justify-between">
-            <StatsPanel className="stats-panel mb-4" />
-            <TransactionTable className="transaction-table flex-grow" />
+        <div className='container content-container'>
+          <div className='left-column w-full lg:w-[550px] flex flex-col justify-between'>
+            <StatsPanel className='stats-panel mb-4' />
+            <TransactionTable className='transaction-table flex-grow' />
           </div>
 
-          <div className="right-column w-full lg:w-[800px] bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50 chat-panel flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-gray-800">
-              <h2 className="text-xl font-[var(--font-space-grotesk),_var(--font-ibm-plex-mono),_sans-serif] text-white">
+          <div className='right-column w-full lg:w-[800px] bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800/50 chat-panel flex flex-col'>
+            <div className='flex items-center justify-between p-4 border-b border-gray-800'>
+              <h2 className='text-xl font-[var(--font-space-grotesk),_var(--font-ibm-plex-mono),_sans-serif] text-white'>
                 MCP Agent Playground
               </h2>
               <ToolsPanel setInputValue={setInputValue} />
             </div>
 
             {/* MCP Server Selector Section */}
-            <div className="p-4 border-b border-gray-800/50 bg-gray-900/30">
-              <MCPServerSelector 
-                servers={MCP_SERVERS} 
-                selectedServerId={selectedMCPServerId} 
-                onServerSelect={handleMCPServerSelect} 
+            <div className='p-4 border-b border-gray-800/50 bg-gray-900/30'>
+              <MCPServerSelector
+                servers={MCP_SERVERS}
+                selectedServerId={selectedMCPServerId}
+                onServerSelect={handleMCPServerSelect}
               />
             </div>
 
             {aiMessages.length === 0 && status === "error" && (
-              <div className="p-4 bg-red-100 border border-red-300 rounded-md mb-4 text-red-700">
-                <p className="font-semibold">Error connecting to AI service</p>
-                <p className="text-sm">Please try again or switch to a different MCP.</p>
+              <div className='p-4 bg-red-100 border border-red-300 rounded-md mb-4 text-red-700'>
+                <p className='font-semibold'>Error connecting to AI service</p>
+                <p className='text-sm'>Please try again or switch to a different MCP.</p>
               </div>
             )}
 
             <div
-              className="chat-messages p-4 space-y-4 bg-transparent custom-scrollbar"
-              style={{ overscrollBehavior: "contain" }}
+              className='chat-messages p-4 space-y-4 bg-transparent custom-scrollbar flex-grow overflow-y-auto'
+              style={{overscrollBehavior: "contain"}}
             >
-              {messages.map((message) => (
+              {messages.map(message => (
                 <div
                   key={message.id}
                   className={`flex ${
@@ -989,11 +897,11 @@ export default function Home() {
                   }`}
                 >
                   {message.sender === "bot" && (
-                    <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center mr-2 overflow-hidden">
+                    <div className='w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center mr-2 overflow-hidden'>
                       <img
-                        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-tYmOJmh3dJRJCALKRzftQghOKKJRT8.png"
-                        alt="Story MCP"
-                        className="w-5 h-5"
+                        src='https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-tYmOJmh3dJRJCALKRzftQghOKKJRT8.png'
+                        alt='Story MCP'
+                        className='w-5 h-5'
                       />
                     </div>
                   )}
@@ -1005,7 +913,7 @@ export default function Home() {
                         : "bg-gray-800/70 text-gray-100 backdrop-blur-sm"
                     }`}
                   >
-                    <MemoizedMarkdown 
+                    <MemoizedMarkdown
                       content={message.content}
                       components={markdownComponents}
                     />
@@ -1018,24 +926,24 @@ export default function Home() {
                   </div>
 
                   {message.sender === "user" && (
-                    <div className="w-8 h-8 rounded-full bg-cyan-500 text-white flex items-center justify-center ml-2">
-                      <span className="text-sm font-medium">U</span>
+                    <div className='w-8 h-8 rounded-full bg-cyan-500 text-white flex items-center justify-center ml-2'>
+                      <span className='text-sm font-medium'>U</span>
                     </div>
                   )}
                 </div>
               ))}
               {isLoading && (
                 <motion.div
-                  className="flex justify-start"
+                  className='flex justify-start'
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, opacity: { duration: 0.15 } }}
                 >
-                  <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center mr-2 overflow-hidden">
+                  <div className='w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center mr-2 overflow-hidden'>
                     <img
-                      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-tYmOJmh3dJRJCALKRzftQghOKKJRT8.png"
-                      alt="Story MCP"
-                      className="w-5 h-5"
+                      src='https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-tYmOJmh3dJRJCALKRzftQghOKKJRT8.png'
+                      alt='Story MCP'
+                      className='w-5 h-5'
                     />
                   </div>
 
@@ -1049,10 +957,10 @@ export default function Home() {
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="p-4 border-t border-gray-800/50 bg-black/80">
-              <form onSubmit={handleSendMessage} className="flex gap-2">
-                <div className="flex-1 relative">
-                  <div className="relative w-full px-4 py-3 bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-3xl text-white focus-within:ring-2 focus-within:ring-purple-500 focus-within:border-purple-500">
+            <div className='p-4 border-t border-gray-800/50 bg-black/80'>
+              <form onSubmit={handleSendMessage} className='flex gap-2'>
+                <div className='flex-1 relative'>
+                  <div className='relative w-full px-4 py-3 bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-3xl text-white focus-within:ring-2 focus-within:ring-purple-500 focus-within:border-purple-500'>
                     <textarea
                       value={aiInput}
                       onChange={(e) => {
@@ -1080,17 +988,17 @@ export default function Home() {
                       rows={1}
                       autoComplete="off"
                       data-1p-ignore="true"
-                      className="w-full bg-transparent text-white focus:ring-0 focus:outline-none scrollbar-thin scrollbar-track-gray-900 scrollbar-thumb-gray-800 placeholder-gray-500 resize-none overflow-y-auto min-h-[48px] max-h-[200px]"
+                      className='w-full bg-transparent text-white focus:ring-0 focus:outline-none scrollbar-thin scrollbar-track-gray-900 scrollbar-thumb-gray-800 placeholder-gray-500 resize-none overflow-y-auto min-h-[48px] max-h-[200px]'
                       style={{
                         lineHeight: "1.5",
                       }}
                     />
                     <button
-                      type="submit"
+                      type='submit'
                       disabled={isLoading || !aiInput.trim()}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 size-8 aspect-square flex-shrink-0 flex items-center justify-center rounded-full bg-gradient-to-r from-purple-500/90 to-pink-500/90 text-white backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      className='absolute right-3 top-1/2 transform -translate-y-1/2 size-8 aspect-square flex-shrink-0 flex items-center justify-center rounded-full bg-gradient-to-r from-purple-500/90 to-pink-500/90 text-white backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed'
                     >
-                      <ArrowRight className="h-5 w-5" />
+                      <ArrowRight className='h-5 w-5' />
                     </button>
                   </div>
                 </div>
@@ -1098,21 +1006,21 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <footer className="flex justify-center items-center mt-2">
-          <div className="flex items-center gap-2 text-white/80 hover:text-white transition-colors">
-            <span className="text-sm">Powered by</span>
+        <footer className='flex justify-center items-center mt-2'>
+          <div className='flex items-center gap-2 text-white/80 hover:text-white transition-colors'>
+            <span className='text-sm'>Powered by</span>
             <svg
-              width="24"
-              height="24"
-              viewBox="0 0 276 270"
-              fill="currentColor"
-              xmlns="http://www.w3.org/2000/svg"
-              className="text-current"
+              width='24'
+              height='24'
+              viewBox='0 0 276 270'
+              fill='currentColor'
+              xmlns='http://www.w3.org/2000/svg'
+              className='text-current'
             >
               <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M115.899 40C115.899 34.4772 111.422 30 105.899 30H82.2002C76.6774 30 72.2002 34.4772 72.2002 40V63.6984C72.2002 69.2213 67.7231 73.6984 62.2002 73.6984H40C34.4772 73.6984 30 78.1756 30 83.6984V229.753C30 235.275 34.4771 239.753 40 239.753H63.6985C69.2213 239.753 73.6985 235.275 73.6985 229.753V83.6985C73.6985 78.1756 78.1756 73.6985 83.6985 73.6985H105.899C111.422 73.6985 115.899 69.2213 115.899 63.6985V40ZM203.296 40C203.296 34.4772 198.818 30 193.296 30H169.597C164.074 30 159.597 34.4771 159.597 40V63.6985C159.597 69.2213 164.074 73.6985 169.597 73.6985H191.797C197.32 73.6985 201.797 78.1756 201.797 83.6985V229.753C201.797 235.275 206.275 239.753 211.797 239.753H235.496C241.019 239.753 245.496 235.275 245.496 229.753V83.6984C245.496 78.1756 241.019 73.6984 235.496 73.6984H213.296C207.773 73.6984 203.296 69.2212 203.296 63.6984V40ZM159.597 123.651C159.597 118.129 155.12 113.651 149.597 113.651H125.899C120.376 113.651 115.899 118.129 115.899 123.651V188.551C115.899 194.074 120.376 198.551 125.899 198.551H149.597C155.12 198.551 159.597 194.074 159.597 188.551V123.651Z"
+                fillRule='evenodd'
+                clipRule='evenodd'
+                d='M115.899 40C115.899 34.4772 111.422 30 105.899 30H82.2002C76.6774 30 72.2002 34.4772 72.2002 40V63.6984C72.2002 69.2213 67.7231 73.6984 62.2002 73.6984H40C34.4772 73.6984 30 78.1756 30 83.6984V229.753C30 235.275 34.4771 239.753 40 239.753H63.6985C69.2213 239.753 73.6985 235.275 73.6985 229.753V83.6985C73.6985 78.1756 78.1756 73.6985 83.6985 73.6985H105.899C111.422 73.6985 115.899 69.2213 115.899 63.6985V40ZM203.296 40C203.296 34.4772 198.818 30 193.296 30H169.597C164.074 30 159.597 34.4771 159.597 40V63.6985C159.597 69.2213 164.074 73.6985 169.597 73.6985H191.797C197.32 73.6985 201.797 78.1756 201.797 83.6985V229.753C201.797 235.275 206.275 239.753 211.797 239.753H235.496C241.019 239.753 245.496 235.275 245.496 229.753V83.6984C245.496 78.1756 241.019 73.6984 235.496 73.6984H213.296C207.773 73.6984 203.296 69.2212 203.296 63.6984V40ZM159.597 123.651C159.597 118.129 155.12 113.651 149.597 113.651H125.899C120.376 113.651 115.899 118.129 115.899 123.651V188.551C115.899 194.074 120.376 198.551 125.899 198.551H149.597C155.12 198.551 159.597 194.074 159.597 188.551V123.651Z'
               />
             </svg>
           </div>
@@ -1121,24 +1029,24 @@ export default function Home() {
 
       {/* Transaction signing modal - make it more noticeable */}
       {showSignModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-md">
-          <div className="bg-gray-900 border-2 border-purple-500 rounded-xl max-w-md w-full p-6 shadow-2xl animate-pulse-slow">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-white">Transaction Request</h3>
-              <div className="px-2 py-1 bg-yellow-600 text-white text-xs rounded-full animate-pulse">
+        <div className='fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-md'>
+          <div className='bg-gray-900 border-2 border-purple-500 rounded-xl max-w-md w-full p-6 shadow-2xl animate-pulse-slow'>
+            <div className='flex items-center justify-between mb-4'>
+              <h3 className='text-xl font-bold text-white'>Transaction Request</h3>
+              <div className='px-2 py-1 bg-yellow-600 text-white text-xs rounded-full animate-pulse'>
                 Action Required
               </div>
             </div>
             
-            <p className="text-gray-300 mb-6 text-lg">{pendingTransaction.message}</p>
+            <p className='text-gray-300 mb-6 text-lg'>{pendingTransaction.message}</p>
             
-            <div className="bg-black/50 p-4 rounded-lg mb-6 font-mono text-sm text-gray-300 overflow-x-auto border border-gray-700">
-              <p className="mb-2">To: <span className="text-blue-400">{pendingTransaction.transaction.to}</span></p>
-              <p className="mb-2">Amount: <span className="text-green-400 font-bold">{Number(BigInt(pendingTransaction.transaction.value)) / 1e18} IP</span></p>
-              <p>Gas: <span className="text-orange-400">{parseInt(pendingTransaction.transaction.gas, 16)}</span></p>
+            <div className='bg-black/50 p-4 rounded-lg mb-6 font-mono text-sm text-gray-300 overflow-x-auto border border-gray-700'>
+              <p className='mb-2'>To: <span className='text-blue-400'>{pendingTransaction.transaction.to}</span></p>
+              <p className='mb-2'>Amount: <span className='text-green-400 font-bold'>{Number(BigInt(pendingTransaction.transaction.value)) / 1e18} IP</span></p>
+              <p>Gas: <span className='text-orange-400'>{parseInt(pendingTransaction.transaction.gas, 16)}</span></p>
             </div>
             
-            <div className="flex justify-end space-x-4 mt-6">
+            <div className='flex justify-end space-x-4 mt-6'>
               <button
                 onClick={() => {
                   setShowSignModal(false);
@@ -1152,13 +1060,13 @@ export default function Home() {
                   });
                   setMessages(newMessages);
                 }}
-                className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                className='px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors'
               >
                 Reject Transaction
               </button>
               <button
                 onClick={handleSignTransaction}
-                className="px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-colors font-bold"
+                className='px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-colors font-bold'
                 data-sign-tx-button
               >
                 Sign Transaction
@@ -1173,16 +1081,16 @@ export default function Home() {
 
 const LoadingBubble = () => {
   return (
-    <div className="flex justify-start">
-      <div className="flex space-x-1 items-center h-4">
-        <div className="typing-dot w-2 h-2 bg-gray-500 rounded-full animate-pulse"></div>
+    <div className='flex justify-start'>
+      <div className='flex space-x-1 items-center h-4'>
+        <div className='typing-dot w-2 h-2 bg-gray-500 rounded-full animate-pulse'></div>
         <div
-          className="typing-dot w-2 h-2 bg-gray-500 rounded-full animate-pulse"
-          style={{ animationDelay: "0.2s" }}
+          className='typing-dot w-2 h-2 bg-gray-500 rounded-full animate-pulse'
+          style={{ animationDelay: '0.2s' }}
         ></div>
         <div
-          className="typing-dot w-2 h-2 bg-gray-500 rounded-full animate-pulse"
-          style={{ animationDelay: "0.4s" }}
+          className='typing-dot w-2 h-2 bg-gray-500 rounded-full animate-pulse'
+          style={{ animationDelay: '0.4s' }}
         ></div>
       </div>
     </div>

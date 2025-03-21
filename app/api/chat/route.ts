@@ -115,8 +115,8 @@ export async function POST(req: NextRequest) {
           "Cache-Control": "no-cache",
           "Connection": "keep-alive",
           "Transfer-Encoding": "chunked",
-          "x-acme-stream-format": "text", // Use text format instead of vercel-ai
-          "x-vercel-ai-stream-data": "text" // Explicitly specify text protocol
+          "x-acme-stream-format": "text",  // Use pure text streaming
+          "x-vercel-ai-stream-data": "text"
         },
       });
     } catch (error) {

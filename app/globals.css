@@ -275,16 +275,15 @@ footer {
 
 /* Tight markdown styling specifically for chat messages */
 .markdown-tight {
-  line-height: 1.15;
-  width: 100%;
+  white-space: pre-line;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .markdown-tight p {
-  margin-top: 0.15rem;
-  margin-bottom: 0.15rem;
-  display: flex;
-  flex-wrap: wrap;
-  width: 100%;
+  margin: 0;
+  padding: 0;
+  white-space: pre-line;
 }
 
 .markdown-tight ul,
@@ -339,13 +338,11 @@ footer {
 }
 
 .markdown-tight pre {
-  margin-top: 0.3rem;
-  margin-bottom: 0.3rem;
-  width: 100%;
+  white-space: pre-wrap;
 }
 
 .markdown-tight code {
-  white-space: break-spaces;
+  white-space: pre-wrap;
 }
 
 /* Remove extra spacing between paragraphs */
