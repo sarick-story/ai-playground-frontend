@@ -45,19 +45,29 @@ interface MemoizedMarkdownProps {
 
 // Create a memoized markdown component to prevent unnecessary re-renders
 const MemoizedMarkdown = memo(
-  ({ content, components }: MemoizedMarkdownProps) => (
-    <div className="markdown-tight w-full">
-      <ReactMarkdown 
-        components={components}
+  ({content, components}: MemoizedMarkdownProps) => (
+    <div className='markdown-tight w-full prose dark:prose-invert max-w-none'>
+      <ReactMarkdown
+        components={{
+          ...components,
+          strong: ({node, ...props}) => <span className="font-bold" {...props} />,
+          h1: ({node, ...props}) => <h1 className="text-2xl font-bold mb-4" {...props} />,
+          h2: ({node, ...props}) => <h2 className="text-xl font-bold mb-3" {...props} />,
+          ul: ({node, ...props}) => <ul className="list-disc pl-4 mb-4" {...props} />,
+          li: ({node, ...props}) => <li className="mb-1" {...props} />,
+        }}
         remarkPlugins={[remarkGfm, remarkBreaks]}
       >
         {content}
       </ReactMarkdown>
     </div>
   ),
-  (prevProps: MemoizedMarkdownProps, nextProps: MemoizedMarkdownProps) => 
+  (prevProps: MemoizedMarkdownProps, nextProps: MemoizedMarkdownProps) =>
     prevProps.content === nextProps.content
-);
+)
+
+// Set display name for React DevTools
+MemoizedMarkdown.displayName = "MemoizedMarkdown";
 
 // Create a TimestampDisplay component for client-side only rendering
 const TimestampDisplay = memo(({ timestamp }: { timestamp: Date }) => {
@@ -134,87 +144,6 @@ export default function Home() {
     },
     id: `chat-${selectedMCPServerId}-${address || 'no-wallet'}`,
     streamProtocol: 'text', // Use raw text protocol for compatibility with the backend
-    onError: (error) => {
-      console.error("Chat error:", error);
-      
-      // Check if this is a special error from Vercel AI SDK that might be caused by a JSON response
-      if (error.message?.includes("Failed to parse stream")) {
-        console.log("Stream parse error detected - this might be a transaction response");
-        
-        // Make a direct API call to get the JSON data
-        fetch("/api/chat", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            messages: [{role: "user", content: aiInput}],
-            mcp_type: selectedMCPServerId,
-            wallet_address: address
-          })
-        })
-        .then(response => response.json())
-        .then(data => {
-          console.log("Direct API call response:", data);
-          if (data.is_transaction) {
-            // Process transaction directly
-            fetch("/api/transaction", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                to_address: data.transaction_details.to_address,
-                amount: data.transaction_details.amount,
-                wallet_address: data.transaction_details.wallet_address
-              }),
-            })
-            .then(response => response.json())
-            .then(txData => {
-              // Create transaction data format for wagmi
-              const wagmiTxData = {
-                transaction: {
-                  to: txData.transaction.to,
-                  value: parseEther(txData.transaction.value),
-                  data: txData.transaction.data || '0x',
-                  gas: txData.transaction.gas
-                },
-                message: txData.message
-              };
-              
-              // Store the transaction data and show transaction modal
-              setPendingTransaction(wagmiTxData);
-              setShowSignModal(true);
-              
-              // Add the message to the chat
-              const newMessages = [...messages];
-              newMessages.push({
-                id: Date.now().toString(),
-                content: data.message,
-                sender: "bot",
-                timestamp: new Date(),
-              });
-              setMessages(newMessages);
-            })
-            .catch(err => {
-              console.error("Transaction processing error:", err);
-              // Add error message to chat
-              const newMessages = [...messages];
-              newMessages.push({
-                id: Date.now().toString(),
-                content: `❌ Error preparing transaction: ${err.message}`,
-                sender: "bot", 
-                timestamp: new Date(),
-              });
-              setMessages(newMessages);
-            });
-          }
-        })
-        .catch(err => {
-          console.error("Failed to get direct API data:", err);
-        });
-      }
-    },
     onFinish: (message) => {
       // Only log in development
       if (process.env.NODE_ENV === 'development') {
@@ -404,6 +333,87 @@ export default function Home() {
         console.error("Response error:", response.status, response.statusText);
       }
     },
+    onError: (error) => {
+      console.error("Chat error:", error);
+      
+      // Check if this is a special error from Vercel AI SDK that might be caused by a JSON response
+      if (error.message?.includes("Failed to parse stream")) {
+        console.log("Stream parse error detected - this might be a transaction response");
+        
+        // Make a direct API call to get the JSON data
+        fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            messages: [{role: "user", content: aiInput}],
+            mcp_type: selectedMCPServerId,
+            wallet_address: address
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log("Direct API call response:", data);
+          if (data.is_transaction) {
+            // Process transaction directly
+            fetch("/api/transaction", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                to_address: data.transaction_details.to_address,
+                amount: data.transaction_details.amount,
+                wallet_address: data.transaction_details.wallet_address
+              }),
+            })
+            .then(response => response.json())
+            .then(txData => {
+              // Create transaction data format for wagmi
+              const wagmiTxData = {
+                transaction: {
+                  to: txData.transaction.to,
+                  value: parseEther(txData.transaction.value),
+                  data: txData.transaction.data || '0x',
+                  gas: txData.transaction.gas
+                },
+                message: txData.message
+              };
+              
+              // Store the transaction data and show transaction modal
+              setPendingTransaction(wagmiTxData);
+              setShowSignModal(true);
+              
+              // Add the message to the chat
+              const newMessages = [...messages];
+              newMessages.push({
+                id: Date.now().toString(),
+                content: data.message,
+                sender: "bot",
+                timestamp: new Date(),
+              });
+              setMessages(newMessages);
+            })
+            .catch(err => {
+              console.error("Transaction processing error:", err);
+              // Add error message to chat
+              const newMessages = [...messages];
+              newMessages.push({
+                id: Date.now().toString(),
+                content: `❌ Error preparing transaction: ${err.message}`,
+                sender: "bot", 
+                timestamp: new Date(),
+              });
+              setMessages(newMessages);
+            });
+          }
+        })
+        .catch(err => {
+          console.error("Failed to get direct API data:", err);
+        });
+      }
+    },
   });
   const isLoading = status === "submitted";
 
@@ -426,13 +436,10 @@ export default function Home() {
         console.log("Latest AI message content:", aiMessages[aiMessages.length - 1].content);
       }
     }
-  }, [aiMessages]);
-
-  // Update our messages state when AI SDK messages change
-  useEffect(() => {
+    
+    // Update our messages state when AI SDK messages change
     if (aiMessages.length > 0) {
-      console.log("AI SDK messages updated:", aiMessages.length);
-      const newMessages = aiMessages.map((msg) => ({
+      const newMessages = aiMessages.map(msg => ({
         id: msg.id,
         content: msg.content,
         sender: (msg.role === "user" ? "user" : "bot") as "user" | "bot",
@@ -448,8 +455,8 @@ export default function Home() {
       };
 
       // Check if there's already a welcome message in the mapped messages
-      const hasWelcomeInNew = newMessages.some((msg) => msg.id === "welcome");
-      
+      const hasWelcomeInNew = newMessages.some(msg => msg.id === "welcome");
+
       if (!hasWelcomeInNew) {
         // Add the welcome message at the beginning if it's not already there
         setMessages([welcomeMessage, ...(newMessages as Message[])]);
@@ -1002,7 +1009,12 @@ export default function Home() {
                       content={message.content}
                       components={markdownComponents}
                     />
-                    <TimestampDisplay timestamp={message.timestamp} />
+                    <p className='text-xs opacity-70 mt-1'>
+                      {message.timestamp.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
                   </div>
 
                   {message.sender === "user" && (
