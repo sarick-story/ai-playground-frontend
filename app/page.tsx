@@ -110,6 +110,9 @@ export default function Home() {
   const [txStatus, setTxStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [showSignModal, setShowSignModal] = useState(false);
   const [privateKey, setPrivateKey] = useState<string>("");
+  const [showInterruptModal, setShowInterruptModal] = useState(false);
+  const [currentInterrupt, setCurrentInterrupt] = useState<any>(null);
+  const [pendingConversationId, setPendingConversationId] = useState<string>("");
 
   // Use Vercel AI SDK for chat
   useEffect(() => {
@@ -312,14 +315,47 @@ export default function Home() {
     handleInputChange(syntheticEvent);
   };
 
-  // Add debugging for aiMessages
+  // Function to detect and handle interrupt messages
+  const detectInterruptMessage = (content: string) => {
+    const interruptMatch = content.match(/__INTERRUPT_START__([\s\S]+?)__INTERRUPT_END__/);
+    if (interruptMatch && interruptMatch[1]) {
+      try {
+        const interruptData = JSON.parse(interruptMatch[1]);
+        console.log("Interrupt detected:", interruptData);
+        
+        // Store interrupt data and show confirmation modal
+        setCurrentInterrupt(interruptData);
+        setShowInterruptModal(true);
+        
+        // Store conversation ID from the AI messages
+        if (aiMessages.length > 0) {
+          const conversationId = `chat-${selectedMCPServerId}-${address || 'no-wallet'}`;
+          setPendingConversationId(conversationId);
+        }
+        
+        // Return cleaned content without interrupt markers
+        return content.replace(/__INTERRUPT_START__[\s\S]+?__INTERRUPT_END__/, '').trim();
+      } catch (e) {
+        console.error("Failed to parse interrupt data:", e);
+      }
+    }
+    return content;
+  };
+
+  // Add debugging for aiMessages and interrupt detection
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       console.log("AI Messages updated", aiMessages);
       
       // Log message content for debugging
       if (aiMessages.length > 0) {
-        console.log("Latest AI message content:", aiMessages[aiMessages.length - 1].content);
+        const latestMessage = aiMessages[aiMessages.length - 1];
+        console.log("Latest AI message content:", latestMessage.content);
+        
+        // Check for interrupt in the latest message
+        if (latestMessage.content.includes('__INTERRUPT_START__')) {
+          console.log("Interrupt pattern found in message");
+        }
       }
     }
     
@@ -327,7 +363,7 @@ export default function Home() {
     if (aiMessages.length > 0) {
       const newMessages = aiMessages.map(msg => ({
         id: msg.id,
-        content: msg.content,
+        content: detectInterruptMessage(msg.content), // Process interrupts
         sender: (msg.role === "user" ? "user" : "bot") as "user" | "bot",
         timestamp: new Date(),
       }));
@@ -350,7 +386,7 @@ export default function Home() {
         setMessages(newMessages as Message[]);
       }
     }
-  }, [aiMessages]);
+  }, [aiMessages, selectedMCPServerId, address]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -821,6 +857,86 @@ export default function Home() {
     }
   }, [isConnected, address, walletClient, pendingTransaction]);
 
+  // Handler for interrupt confirmation/rejection
+  const handleInterruptConfirmation = async (confirmed: boolean) => {
+    if (!currentInterrupt || !pendingConversationId) {
+      console.error("No current interrupt to handle");
+      return;
+    }
+
+    try {
+      console.log(`Sending interrupt ${confirmed ? 'confirmation' : 'rejection'}:`, {
+        interrupt_id: currentInterrupt.interrupt_id,
+        conversation_id: pendingConversationId,
+        confirmed
+      });
+
+      const response = await fetch('/api/interrupt/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          interrupt_id: currentInterrupt.interrupt_id,
+          conversation_id: pendingConversationId,
+          confirmed,
+          wallet_address: address
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Interrupt confirmation failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Interrupt confirmation result:', result);
+
+      // Close the modal
+      setShowInterruptModal(false);
+      setCurrentInterrupt(null);
+      setPendingConversationId("");
+
+      // Add a message about the user's decision
+      const statusMessage = confirmed 
+        ? "✅ Operation confirmed, continuing..."
+        : "❌ Operation cancelled by user";
+      
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        content: statusMessage,
+        sender: "bot",
+        timestamp: new Date(),
+      }]);
+
+      if (confirmed && result.status === 'completed') {
+        // If execution completed, add the result
+        if (result.result && result.result.messages) {
+          const lastMessage = result.result.messages[result.result.messages.length - 1];
+          if (lastMessage && lastMessage.content) {
+            setMessages(prev => [...prev, {
+              id: Date.now().toString(),
+              content: lastMessage.content,
+              sender: "bot",
+              timestamp: new Date(),
+            }]);
+          }
+        }
+      }
+
+    } catch (error) {
+      console.error('Error handling interrupt confirmation:', error);
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        content: `❌ Error handling confirmation: ${error}`,
+        sender: "bot",
+        timestamp: new Date(),
+      }]);
+      
+      // Still close the modal even on error
+      setShowInterruptModal(false);
+      setCurrentInterrupt(null);
+      setPendingConversationId("");
+    }
+  };
+
   // Track when the sign modal becomes visible
   useEffect(() => {
     if (showSignModal) {
@@ -835,6 +951,15 @@ export default function Home() {
       console.log("Transaction sign modal is now HIDDEN");
     }
   }, [showSignModal]);
+
+  // Track when the interrupt modal becomes visible
+  useEffect(() => {
+    if (showInterruptModal) {
+      console.log("Interrupt confirmation modal is now VISIBLE");
+    } else {
+      console.log("Interrupt confirmation modal is now HIDDEN");
+    }
+  }, [showInterruptModal]);
 
   return (
     <>
@@ -1070,6 +1195,99 @@ export default function Home() {
                 data-sign-tx-button
               >
                 Sign Transaction
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Interrupt confirmation modal */}
+      {showInterruptModal && currentInterrupt && (
+        <div className='fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-md'>
+          <div className='bg-gray-900 border-2 border-yellow-500 rounded-xl max-w-lg w-full p-6 shadow-2xl'>
+            <div className='flex items-center justify-between mb-4'>
+              <h3 className='text-xl font-bold text-white'>
+                {currentInterrupt.operation || 'Tool Confirmation'}
+              </h3>
+              <div className={`px-2 py-1 text-white text-xs rounded-full ${
+                currentInterrupt.severity === 'high' || currentInterrupt.severity === 'critical' 
+                  ? 'bg-red-600' 
+                  : 'bg-orange-600'
+              }`}>
+                {currentInterrupt.severity === 'high' ? 'High Risk' : 'Confirmation Required'}
+              </div>
+            </div>
+            
+            <p className='text-gray-300 mb-4'>{currentInterrupt.message}</p>
+            
+            {/* Tool and operation details */}
+            <div className='bg-black/50 p-4 rounded-lg mb-4 border border-gray-700'>
+              <h4 className='text-sm font-bold text-gray-400 mb-2'>Operation Details</h4>
+              <p className='text-sm text-gray-300 mb-1'>Tool: <span className='text-blue-400'>{currentInterrupt.tool_name}</span></p>
+              <p className='text-sm text-gray-300'>{currentInterrupt.description}</p>
+            </div>
+
+            {/* Parameters */}
+            {currentInterrupt.parameters && Object.keys(currentInterrupt.parameters).length > 0 && (
+              <div className='bg-black/50 p-4 rounded-lg mb-4 border border-gray-700'>
+                <h4 className='text-sm font-bold text-gray-400 mb-2'>Parameters</h4>
+                <div className='text-xs font-mono text-gray-300 space-y-1'>
+                  {Object.entries(currentInterrupt.parameters).map(([key, value]) => (
+                    <div key={key}>
+                      <span className='text-orange-400'>{key}:</span>{' '}
+                      <span className='text-green-400'>
+                        {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Fee information */}
+            {currentInterrupt.fee_information && (
+              <div className='bg-black/50 p-4 rounded-lg mb-4 border border-yellow-700'>
+                <h4 className='text-sm font-bold text-yellow-400 mb-2'>Fee Information</h4>
+                <div className='text-sm text-gray-300 space-y-1'>
+                  <p>Fee: <span className='text-yellow-400 font-bold'>{currentInterrupt.fee_information.fee_display}</span></p>
+                  {currentInterrupt.fee_information.total_cost && (
+                    <p>Total Cost: <span className='text-yellow-400 font-bold'>{currentInterrupt.fee_information.total_cost}</span></p>
+                  )}
+                  <p className='text-xs text-gray-500'>Token: {currentInterrupt.fee_information.fee_token}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Blockchain impact */}
+            {currentInterrupt.blockchain_impact && (
+              <div className='bg-black/50 p-4 rounded-lg mb-4 border border-red-700'>
+                <h4 className='text-sm font-bold text-red-400 mb-2'>Blockchain Impact</h4>
+                <div className='text-sm text-gray-300 space-y-1'>
+                  <p>Action: <span className='text-red-400'>{currentInterrupt.blockchain_impact.action}</span></p>
+                  <p>Network: <span className='text-blue-400'>{currentInterrupt.blockchain_impact.network}</span></p>
+                  {currentInterrupt.blockchain_impact.estimated_gas && (
+                    <p>Est. Gas: <span className='text-orange-400'>{currentInterrupt.blockchain_impact.estimated_gas}</span></p>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            <div className='flex justify-end space-x-4 mt-6'>
+              <button
+                onClick={() => handleInterruptConfirmation(false)}
+                className='px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors'
+              >
+                Cancel Operation
+              </button>
+              <button
+                onClick={() => handleInterruptConfirmation(true)}
+                className={`px-4 py-3 text-white rounded-lg transition-colors font-bold ${
+                  currentInterrupt.severity === 'high' || currentInterrupt.severity === 'critical'
+                    ? 'bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700'
+                    : 'bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700'
+                }`}
+              >
+                Confirm & Execute
               </button>
             </div>
           </div>

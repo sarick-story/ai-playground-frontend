@@ -1,0 +1,81 @@
+
+> mcp_playground@0.1.0 dev
+> next dev --turbopack
+
+ ⚠ Warning: Found multiple lockfiles. Selecting /Users/zizhuoliu/Desktop/Story/package-lock.json.
+   Consider removing the lockfiles at:
+   * /Users/zizhuoliu/Desktop/Story/ai-playground-frontend/package-lock.json
+
+   ▲ Next.js 15.4.2 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.68.55:3000
+   - Environments: .env.local
+   - Experiments (use with caution):
+     · turbo
+     · optimizePackageImports
+
+ ✓ Starting...
+ ⚠ The config property `experimental.turbo` is deprecated. Move this setting to `config.turbopack` as Turbopack is now stable.
+ ✓ Ready in 810ms
+ ○ Compiling / ...
+ ✓ Compiled / in 3s
+ GET / 200 in 3458ms
+ HEAD / 200 in 164ms
+ ✓ Compiled /favicon.ico in 408ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 667ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 219ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 223ms
+ ✓ Compiled /api/chat in 170ms
+GOOGLE_KEY_JSON not provided, using application default credentials
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Backend connection error: TypeError: fetch failed
+    at async POST (app/api/chat/route.ts:64:23)
+  62 |     try {
+  63 |       // Forward the request to the backend server
+> 64 |       const response = await fetch(`${BACKEND_URL}/api/chat`, {
+     |                       ^
+  65 |         method: "POST",
+  66 |         headers,
+  67 |         body: JSON.stringify({ {
+  [cause]: [AggregateError: ] { code: 'ECONNREFUSED' }
+}
+Returning mock response for local development
+ POST /api/chat 200 in 311ms
+ GET / 200 in 72ms
+ GET / 200 in 53ms
+ GET / 200 in 100ms
+ GET / 200 in 54ms
+ GET / 200 in 131ms
+ GET / 200 in 68ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 228ms
+ HEAD / 200 in 49ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 218ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Backend connection error: TypeError: fetch failed
+    at async POST (app/api/chat/route.ts:64:23)
+  62 |     try {
+  63 |       // Forward the request to the backend server
+> 64 |       const response = await fetch(`${BACKEND_URL}/api/chat`, {
+     |                       ^
+  65 |         method: "POST",
+  66 |         headers,
+  67 |         body: JSON.stringify({ {
+  [cause]: [AggregateError: ] { code: 'ECONNREFUSED' }
+}
+Returning mock response for local development
+ POST /api/chat 200 in 7913ms
+ GET / 200 in 69ms
+ GET / 200 in 52ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 223ms
+ HEAD / 200 in 48ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 220ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 54ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 58ms
