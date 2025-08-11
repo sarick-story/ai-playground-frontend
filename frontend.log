@@ -79,3 +79,67 @@ Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mc
 Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
 Streaming response detected, content-type: text/event-stream
  POST /api/chat 200 in 58ms
+ GET / 200 in 170ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 253ms
+ HEAD / 200 in 55ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 220ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 2101ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":2}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 3700ms
+ GET / 200 in 130ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 242ms
+ HEAD / 200 in 51ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 220ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 2189ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":2}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 6221ms
+ GET / 200 in 114ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 235ms
+ HEAD / 200 in 45ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 219ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 2170ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 4769ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":5}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 3924ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":7}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 3734ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":9}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 5713ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":11}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 4887ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":13}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 3384ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":15}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 4220ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":17}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 4378ms
