@@ -11,26 +11,19 @@ export function getConversationId(): string {
 // For client-side usage
 export function getClientConversationId(): string {
   if (typeof window === 'undefined') {
-    return uuidv4(); // Fallback for SSR
+    return "2"; // Use "2" for fresh testing
   }
   
-  const storedId = localStorage.getItem('conversationId');
-  if (storedId) {
-    return storedId;
-  }
-  
-  const newId = uuidv4();
-  localStorage.setItem('conversationId', newId);
-  return newId;
+  // For testing purposes, always return "2" (fresh start)
+  return "2";
 }
 
 // Reset the conversation (for starting a new chat)
 export function resetConversation(): string {
   if (typeof window === 'undefined') {
-    return uuidv4(); // Fallback for SSR
+    return "2"; // Use "2" for fresh testing
   }
   
-  const newId = uuidv4();
-  localStorage.setItem('conversationId', newId);
-  return newId;
+  // For testing purposes, always return "2" (fresh start)
+  return "2";
 } 

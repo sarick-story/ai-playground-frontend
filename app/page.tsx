@@ -329,7 +329,8 @@ export default function Home() {
         
         // Store conversation ID from the AI messages
         if (aiMessages.length > 0) {
-          const conversationId = `chat-${selectedMCPServerId}-${address || 'no-wallet'}`;
+          // For testing purposes, use simple conversation ID "2"
+          const conversationId = "2";
           setPendingConversationId(conversationId);
         }
         
