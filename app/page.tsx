@@ -327,11 +327,12 @@ export default function Home() {
         setCurrentInterrupt(interruptData);
         setShowInterruptModal(true);
         
-        // Store conversation ID from the AI messages
-        if (aiMessages.length > 0) {
-          // For testing purposes, use simple conversation ID "2"
-          const conversationId = "2";
-          setPendingConversationId(conversationId);
+        // Always use conversation_id from backend (UUID)
+        if (interruptData.conversation_id) {
+          setPendingConversationId(interruptData.conversation_id);
+          console.log("Using backend UUID for resume:", interruptData.conversation_id);
+        } else {
+          console.error("No conversation_id received from backend in interrupt data!");
         }
         
         // Return cleaned content without interrupt markers
@@ -907,10 +908,11 @@ export default function Home() {
         timestamp: new Date(),
       }]);
 
-      if (confirmed && result.status === 'completed') {
-        // If execution completed, add the result
-        if (result.result && result.result.messages) {
-          const lastMessage = result.result.messages[result.result.messages.length - 1];
+      if (result.status === 'resumed') {
+        // If conversation resumed (regardless of confirm/cancel), add the AI response
+        if (result.result && result.result.result && result.result.result.messages) {
+          const messages = result.result.result.messages;
+          const lastMessage = messages[messages.length - 1];
           if (lastMessage && lastMessage.content) {
             setMessages(prev => [...prev, {
               id: Date.now().toString(),

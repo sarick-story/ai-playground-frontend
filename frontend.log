@@ -8,7 +8,7 @@
 
    ▲ Next.js 15.4.2 (Turbopack)
    - Local:        http://localhost:3000
-   - Network:      http://192.168.68.55:3000
+   - Network:      http://192.168.68.58:3000
    - Environments: .env.local
    - Experiments (use with caution):
      · turbo
@@ -16,130 +16,515 @@
 
  ✓ Starting...
  ⚠ The config property `experimental.turbo` is deprecated. Move this setting to `config.turbopack` as Turbopack is now stable.
- ✓ Ready in 810ms
+ ✓ Ready in 848ms
  ○ Compiling / ...
- ✓ Compiled / in 3s
- GET / 200 in 3458ms
- HEAD / 200 in 164ms
- ✓ Compiled /favicon.ico in 408ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 667ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 219ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 223ms
- ✓ Compiled /api/chat in 170ms
+ ✓ Compiled / in 6.1s
+ GET / 200 in 6622ms
+ ✓ Compiled /favicon.ico in 157ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 410ms
+ HEAD / 200 in 91ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 283ms
+ GET / 200 in 190ms
+ HEAD / 200 in 59ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 298ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 225ms
+ ✓ Compiled /api/chat in 244ms
 GOOGLE_KEY_JSON not provided, using application default credentials
 Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
 Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Backend connection error: TypeError: fetch failed
-    at async POST (app/api/chat/route.ts:64:23)
-  62 |     try {
-  63 |       // Forward the request to the backend server
-> 64 |       const response = await fetch(`${BACKEND_URL}/api/chat`, {
-     |                       ^
-  65 |         method: "POST",
-  66 |         headers,
-  67 |         body: JSON.stringify({ {
-  [cause]: [AggregateError: ] { code: 'ECONNREFUSED' }
-}
-Returning mock response for local development
- POST /api/chat 200 in 311ms
- GET / 200 in 72ms
- GET / 200 in 53ms
- GET / 200 in 100ms
- GET / 200 in 54ms
- GET / 200 in 131ms
- GET / 200 in 68ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 228ms
- HEAD / 200 in 49ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 218ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Backend connection error: TypeError: fetch failed
-    at async POST (app/api/chat/route.ts:64:23)
-  62 |     try {
-  63 |       // Forward the request to the backend server
-> 64 |       const response = await fetch(`${BACKEND_URL}/api/chat`, {
-     |                       ^
-  65 |         method: "POST",
-  66 |         headers,
-  67 |         body: JSON.stringify({ {
-  [cause]: [AggregateError: ] { code: 'ECONNREFUSED' }
-}
-Returning mock response for local development
- POST /api/chat 200 in 7913ms
- GET / 200 in 69ms
- GET / 200 in 52ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 223ms
- HEAD / 200 in 48ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 220ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
 Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 54ms
+ POST /api/chat 200 in 2769ms
 Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
 Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
 Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 58ms
- GET / 200 in 170ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 253ms
- HEAD / 200 in 55ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 220ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 2101ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":2}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 3700ms
- GET / 200 in 130ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 242ms
- HEAD / 200 in 51ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 220ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 2189ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":2}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 6221ms
- GET / 200 in 114ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 235ms
- HEAD / 200 in 45ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 219ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 2170ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 4769ms
+ POST /api/chat 200 in 1391ms
+ ✓ Compiled /api/interrupt/confirm in 99ms
+Interrupt confirmation request: {
+  interrupt_id: '8f691a69-9dc1-475b-a3b0-e0881b00ac73',
+  conversation_id: 'ec00e4a7-9dad-4655-994c-0bbdd209af58',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'resumed',
+  conversation_id: 'ec00e4a7-9dad-4655-994c-0bbdd209af58',
+  result: { status: 'completed', result: { messages: [Array] } }
+}
+ POST /api/interrupt/confirm 200 in 1527ms
 Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":5}
 Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
 Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 3924ms
+Interrupt confirmation request: {
+  interrupt_id: '8f691a69-9dc1-475b-a3b0-e0881b00ac73',
+  conversation_id: 'ec00e4a7-9dad-4655-994c-0bbdd209af58',
+  confirmed: false,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'cancelled',
+  conversation_id: 'ec00e4a7-9dad-4655-994c-0bbdd209af58',
+  result: { status: 'cancelled', result: { messages: [Array] } }
+}
+ POST /api/interrupt/confirm 200 in 26ms
+ POST /api/chat 200 in 2031ms
+Interrupt confirmation request: {
+  interrupt_id: 'a52d042c-38ad-409a-900f-cf92530a07cf',
+  conversation_id: '0149b74b-27d7-47ac-a00b-d075c31e6510',
+  confirmed: false,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'cancelled',
+  conversation_id: '0149b74b-27d7-47ac-a00b-d075c31e6510',
+  result: { status: 'cancelled', result: { messages: [Array] } }
+}
+ POST /api/interrupt/confirm 200 in 928ms
 Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":7}
 Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
 Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 3734ms
+ POST /api/chat 200 in 1346ms
+Interrupt confirmation request: {
+  interrupt_id: 'c296c958-8d3a-496f-ab37-19ad8506f394',
+  conversation_id: 'd5ec97ff-3416-4347-b9e3-8988c3789206',
+  confirmed: false,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'cancelled',
+  conversation_id: 'd5ec97ff-3416-4347-b9e3-8988c3789206',
+  result: { status: 'cancelled', result: { messages: [Array] } }
+}
+ POST /api/interrupt/confirm 200 in 1135ms
 Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":9}
 Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
 Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 5713ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":11}
+ POST /api/chat 200 in 1442ms
+Interrupt confirmation request: {
+  interrupt_id: 'f831441c-c264-4897-908c-26cbfcbdf183',
+  conversation_id: '2400b819-017b-4c38-b1e4-50bedc162dbc',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'resumed',
+  conversation_id: '2400b819-017b-4c38-b1e4-50bedc162dbc',
+  result: { status: 'completed', result: { messages: [Array] } }
+}
+ POST /api/interrupt/confirm 200 in 1008ms
+ GET / 200 in 179ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 294ms
+ HEAD / 200 in 63ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 239ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
 Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
 Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 4887ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":13}
+ POST /api/chat 200 in 1837ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
 Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
 Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 3384ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":15}
+ POST /api/chat 200 in 999ms
+Interrupt confirmation request: {
+  interrupt_id: '6a76f9f3-4cfc-4eb8-83e8-2e41a2e71425',
+  conversation_id: '81b916e6-0252-4fe3-a8bd-7d98ede4cd93',
+  confirmed: false,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'cancelled',
+  conversation_id: '81b916e6-0252-4fe3-a8bd-7d98ede4cd93',
+  result: { status: 'cancelled', result: { messages: [Array] } }
+}
+ POST /api/interrupt/confirm 200 in 743ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":5}
 Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
 Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 4220ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":17}
+ POST /api/chat 200 in 847ms
+Interrupt confirmation request: {
+  interrupt_id: '59fac4e7-396d-4e5f-bd49-44986b4d6e51',
+  conversation_id: 'a89d09b8-ccf4-443d-862d-d883f2888d92',
+  confirmed: false,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'cancelled',
+  conversation_id: 'a89d09b8-ccf4-443d-862d-d883f2888d92',
+  result: { status: 'cancelled', result: { messages: [Array] } }
+}
+ POST /api/interrupt/confirm 200 in 835ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":7}
 Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
 Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 4378ms
+ POST /api/chat 200 in 950ms
+Interrupt confirmation request: {
+  interrupt_id: 'ce0a4d4b-ba0f-4e01-ab14-0deff37296fd',
+  conversation_id: 'fae3a6f3-799f-4a7f-addb-e181a2fac918',
+  confirmed: false,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'cancelled',
+  conversation_id: 'fae3a6f3-799f-4a7f-addb-e181a2fac918',
+  result: { status: 'cancelled', result: { messages: [Array] } }
+}
+ POST /api/interrupt/confirm 200 in 1443ms
+ GET / 200 in 141ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 241ms
+ HEAD / 200 in 60ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 220ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 1906ms
+Interrupt confirmation request: {
+  interrupt_id: '41e9a09d-f66d-4b39-a543-72e1bc82bf75',
+  conversation_id: '2426892a-0545-46ee-b29b-daebbe7b5aea',
+  confirmed: false,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'cancelled',
+  conversation_id: '2426892a-0545-46ee-b29b-daebbe7b5aea',
+  result: { status: 'cancelled', result: { messages: [Array] } }
+}
+ POST /api/interrupt/confirm 200 in 733ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 843ms
+Interrupt confirmation request: {
+  interrupt_id: '13a69e4e-9fe9-461b-a95d-ad2e9ca856c9',
+  conversation_id: '399d585e-4aeb-4783-a18d-deafc5284b95',
+  confirmed: false,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'cancelled',
+  conversation_id: '399d585e-4aeb-4783-a18d-deafc5284b95',
+  result: { status: 'cancelled', result: { messages: [Array] } }
+}
+ POST /api/interrupt/confirm 200 in 1089ms
+ GET / 200 in 236ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 260ms
+ HEAD / 200 in 158ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 227ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 3182ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 776ms
+Interrupt confirmation request: {
+  interrupt_id: '9d664701-be48-44b6-a415-cd7520756f66',
+  conversation_id: 'ea805a1a-6c6f-48d2-a8f7-22b6f34b12f9',
+  confirmed: false,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'cancelled',
+  conversation_id: 'ea805a1a-6c6f-48d2-a8f7-22b6f34b12f9',
+  result: { status: 'cancelled', result: { messages: [Array] } }
+}
+ POST /api/interrupt/confirm 200 in 998ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":5}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 898ms
+Interrupt confirmation request: {
+  interrupt_id: '095799c9-c068-41e4-aa29-b41c8673f86a',
+  conversation_id: '5368f5df-f101-456c-b020-6623a46d72f8',
+  confirmed: false,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'cancelled',
+  conversation_id: '5368f5df-f101-456c-b020-6623a46d72f8',
+  result: { status: 'cancelled', result: { messages: [Array] } }
+}
+ POST /api/interrupt/confirm 200 in 1176ms
+ GET / 200 in 174ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 281ms
+ HEAD / 200 in 108ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 244ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 2856ms
+Interrupt confirmation request: {
+  interrupt_id: 'ae6d4830-7c21-450d-9ac4-6335b2b2a2b8',
+  conversation_id: 'ad201173-94c1-43dc-a7bd-9bcd1d973a83',
+  confirmed: false,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'cancelled',
+  conversation_id: 'ad201173-94c1-43dc-a7bd-9bcd1d973a83',
+  result: { status: 'cancelled', result: { messages: [Array] } }
+}
+ POST /api/interrupt/confirm 200 in 723ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 770ms
+Interrupt confirmation request: {
+  interrupt_id: '59b8b82b-11ce-4798-991b-47ce3af24101',
+  conversation_id: '3055e86e-5ebc-4c9d-8001-9816f27a809d',
+  confirmed: false,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'cancelled',
+  conversation_id: '3055e86e-5ebc-4c9d-8001-9816f27a809d',
+  result: { status: 'cancelled', result: { messages: [Array] } }
+}
+ POST /api/interrupt/confirm 200 in 1221ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":5}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 1059ms
+Interrupt confirmation request: {
+  interrupt_id: 'fdbd1942-4d0e-48fa-a465-1445235179b0',
+  conversation_id: 'c437397c-3438-40d4-9fb6-c8b495078660',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'resumed',
+  conversation_id: 'c437397c-3438-40d4-9fb6-c8b495078660',
+  result: { status: 'completed', result: { messages: [Array] } }
+}
+ POST /api/interrupt/confirm 200 in 987ms
+ ✓ Compiled in 382ms
+ GET / 200 in 1257ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 314ms
+ HEAD / 200 in 95ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 227ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 2119ms
+Interrupt confirmation request: {
+  interrupt_id: '4c07416c-4de8-467e-87b1-d9ba0fec5447',
+  conversation_id: '1dcdb7ff-60e6-4af1-8409-d48c6f3feaf2',
+  confirmed: false,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'resumed',
+  conversation_id: '1dcdb7ff-60e6-4af1-8409-d48c6f3feaf2',
+  result: { status: 'cancelled', result: { messages: [Array] } },
+  tool_confirmed: false
+}
+ POST /api/interrupt/confirm 200 in 872ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 655ms
+Interrupt confirmation request: {
+  interrupt_id: '86cc79d8-1712-4504-9b3c-ed5894fa2b6d',
+  conversation_id: '835736b3-e3fc-4ca3-a272-67a5880f83bf',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'resumed',
+  conversation_id: '835736b3-e3fc-4ca3-a272-67a5880f83bf',
+  result: { status: 'completed', result: { messages: [Array] } },
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 633ms
+ ✓ Compiled in 110ms
+ GET / 200 in 1024ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 281ms
+ HEAD / 200 in 53ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 232ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 1941ms
+Interrupt confirmation request: {
+  interrupt_id: '16da2b1e-5e58-484c-abdc-dd4cb5687256',
+  conversation_id: '2f8248db-6c7b-46f1-8aa2-fccfff7000eb',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'resumed',
+  conversation_id: '2f8248db-6c7b-46f1-8aa2-fccfff7000eb',
+  result: { status: 'completed', result: { messages: [Array] } },
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 826ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 834ms
+Interrupt confirmation request: {
+  interrupt_id: '2a93e849-1d87-4759-9998-5a057fe6ab67',
+  conversation_id: 'd9c4fc25-8d83-4782-870c-8b21fb0836f7',
+  confirmed: false,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'resumed',
+  conversation_id: 'd9c4fc25-8d83-4782-870c-8b21fb0836f7',
+  result: { status: 'cancelled', result: { messages: [Array] } },
+  tool_confirmed: false
+}
+ POST /api/interrupt/confirm 200 in 771ms
+ ✓ Compiled in 112ms
+ GET / 200 in 930ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 329ms
+ HEAD / 200 in 120ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 297ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 1872ms
+Interrupt confirmation request: {
+  interrupt_id: '3e44fd38-8dd5-4a03-9db6-d11d11424331',
+  conversation_id: '80e51721-fedb-4276-b214-c20f3c13d706',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'resumed',
+  conversation_id: '80e51721-fedb-4276-b214-c20f3c13d706',
+  result: { status: 'completed', result: { messages: [Array] } },
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 1058ms
+ GET / 200 in 233ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 298ms
+ HEAD / 200 in 118ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 268ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 2396ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 776ms
+Interrupt confirmation request: {
+  interrupt_id: '23d6f357-7418-47c4-9c76-c0a6d01626e1',
+  conversation_id: 'fac65b7a-7eae-4cac-9a23-908a5f871727',
+  confirmed: false,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'resumed',
+  conversation_id: 'fac65b7a-7eae-4cac-9a23-908a5f871727',
+  result: { status: 'cancelled', result: { messages: [Array] } },
+  tool_confirmed: false
+}
+ POST /api/interrupt/confirm 200 in 683ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":5}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 681ms
+Interrupt confirmation request: {
+  interrupt_id: '2e5683cb-ef2c-418b-8ae3-0b2cb242784e',
+  conversation_id: '125e0700-288d-439d-8509-dadc7903a1cb',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'resumed',
+  conversation_id: '125e0700-288d-439d-8509-dadc7903a1cb',
+  result: { status: 'completed', result: { messages: [Array] } },
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 699ms
+ GET / 200 in 161ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 300ms
+ HEAD / 200 in 66ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 270ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 2419ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 1311ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"storyscan","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: storyscan
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 712ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 585ms
+Interrupt confirmation request: {
+  interrupt_id: 'ab8d6e7f-bf9b-4356-ae6f-6cb1390d3f68',
+  conversation_id: '6ca779fb-28e9-4b77-85f2-44469f4122b5',
+  confirmed: false,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'resumed',
+  conversation_id: '6ca779fb-28e9-4b77-85f2-44469f4122b5',
+  result: { status: 'cancelled', result: { post_model_hook: null } },
+  tool_confirmed: false
+}
+ POST /api/interrupt/confirm 200 in 1172ms
+ GET / 200 in 975ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 258ms
+ HEAD / 200 in 163ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 428ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 1872ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 5406ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":5}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 1543ms
+Interrupt confirmation request: {
+  interrupt_id: '17d4b7b3-2849-4b1e-9ed6-002980d05f3c',
+  conversation_id: '8b87b0ef-3eb9-41c8-a1c8-ef0b748bc995',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Interrupt confirmation request: {
+  interrupt_id: '17d4b7b3-2849-4b1e-9ed6-002980d05f3c',
+  conversation_id: '8b87b0ef-3eb9-41c8-a1c8-ef0b748bc995',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'already_processing',
+  conversation_id: '8b87b0ef-3eb9-41c8-a1c8-ef0b748bc995',
+  message: 'Confirmation already in progress'
+}
+ POST /api/interrupt/confirm 200 in 33ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":7}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 1672ms
+Interrupt confirmation request: {
+  interrupt_id: '17d4b7b3-2849-4b1e-9ed6-002980d05f3c',
+  conversation_id: '8b87b0ef-3eb9-41c8-a1c8-ef0b748bc995',
+  confirmed: false,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'already_processing',
+  conversation_id: '8b87b0ef-3eb9-41c8-a1c8-ef0b748bc995',
+  message: 'Confirmation already in progress'
+}
+ POST /api/interrupt/confirm 200 in 25ms
+Received interrupt confirmation response: {
+  status: 'resumed',
+  conversation_id: '8b87b0ef-3eb9-41c8-a1c8-ef0b748bc995',
+  result: { status: 'error', error: 'Resume operation timed out' },
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 30084ms
+[?25h
