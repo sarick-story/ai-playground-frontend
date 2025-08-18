@@ -118,6 +118,8 @@ export default function Home() {
   const [conversationId, setConversationId] = useState<string>("");
   // Track interrupts we've already handled to prevent duplicate popups
   const handledInterruptIdsRef = useRef<Set<string>>(new Set());
+  // Track which AI message IDs have already been processed to avoid duplicates
+  const processedAiMessageIds = useRef<Set<string>>(new Set());
 
   // Initialize conversation ID on mount
   useEffect(() => {
@@ -212,8 +214,8 @@ export default function Home() {
               setShowSignModal(true);
               
               // Add transaction message to chat
-              setMessages([...messages, {
-                id: Date.now().toString(),
+              setMessages(prev => [...prev, {
+                id: `tx-success-${Date.now()}`,
                 content: jsonData.message,
                 sender: "bot",
                 timestamp: new Date(),
@@ -221,8 +223,8 @@ export default function Home() {
             })
             .catch(error => {
               console.error("Error processing transaction:", error);
-              setMessages([...messages, {
-                id: Date.now().toString(),
+              setMessages(prev => [...prev, {
+                id: `tx-error-${Date.now()}`,
                 content: `❌ Error preparing transaction: ${error.message}`,
                 sender: "bot",
                 timestamp: new Date(),
@@ -293,8 +295,8 @@ export default function Home() {
               setPendingTransaction(wagmiTxData);
               setShowSignModal(true);
               
-              setMessages([...messages, {
-                id: Date.now().toString(),
+              setMessages(prev => [...prev, {
+                id: `tx-error-response-${Date.now()}`,
                 content: data.message,
                 sender: "bot",
                 timestamp: new Date(),
@@ -302,8 +304,8 @@ export default function Home() {
             })
             .catch(err => {
               console.error("Transaction processing error:", err);
-              setMessages([...messages, {
-                id: Date.now().toString(),
+              setMessages(prev => [...prev, {
+                id: `tx-processing-error-${Date.now()}`,
                 content: `❌ Error preparing transaction: ${err.message}`,
                 sender: "bot", 
                 timestamp: new Date(),
@@ -370,7 +372,7 @@ export default function Home() {
     return content;
   };
 
-  // Add debugging for aiMessages and interrupt detection
+  // Incremental AI message processing - only add NEW messages
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       console.log("AI Messages updated", aiMessages);
@@ -387,32 +389,27 @@ export default function Home() {
       }
     }
     
-    // Update our messages state when AI SDK messages change
-    if (aiMessages.length > 0) {
-      const newMessages = aiMessages.map(msg => ({
+    // Find NEW AI messages that haven't been processed yet
+    const newAiMessages = aiMessages.filter(msg => 
+      !processedAiMessageIds.current.has(msg.id)
+    );
+    
+    if (newAiMessages.length > 0) {
+      // Convert new AI messages to Message format
+      const newMessages = newAiMessages.map(msg => ({
         id: msg.id,
         content: detectInterruptMessage(msg.content), // Process interrupts
         sender: (msg.role === "user" ? "user" : "bot") as "user" | "bot",
-        timestamp: new Date(),
+        timestamp: new Date(), // Use actual timestamp when message was added
       }));
 
-      // Always include the welcome message at the beginning
-      const welcomeMessage: Message = {
-        id: "welcome",
-        content: "Hello! How can I help you today?",
-        sender: "bot",
-        timestamp: new Date(),
-      };
-
-      // Check if there's already a welcome message in the mapped messages
-      const hasWelcomeInNew = newMessages.some(msg => msg.id === "welcome");
-
-      if (!hasWelcomeInNew) {
-        // Add the welcome message at the beginning if it's not already there
-        setMessages([welcomeMessage, ...(newMessages as Message[])]);
-      } else {
-        setMessages(newMessages as Message[]);
-      }
+      // Add new messages to the END (preserves chronological order)
+      setMessages(prev => [...prev, ...newMessages]);
+      
+      // Mark these messages as processed
+      newAiMessages.forEach(msg => {
+        processedAiMessageIds.current.add(msg.id);
+      });
     }
   }, [aiMessages, selectedMCPServerId, address]);
 
@@ -689,6 +686,9 @@ export default function Home() {
     
     // Reset the AI SDK messages
     setAiMessages([]);
+    
+    // Clear processed message tracking
+    processedAiMessageIds.current.clear();
   };
 
   // Memoize the markdown components to prevent recreation on each render
@@ -823,14 +823,12 @@ export default function Home() {
       console.log("Transaction sent successfully:", hash);
       
       // Update the chat with transaction success
-      const newMessages = [...messages];
-      newMessages.push({
-        id: Date.now().toString(),
+      setMessages(prev => [...prev, {
+        id: `tx-success-${Date.now()}`,
         content: `✅ Transaction sent successfully! Transaction hash: ${hash}`,
         sender: "bot",
         timestamp: new Date(),
-      });
-      setMessages(newMessages);
+      }]);
       
       setTxStatus('success');
       setPendingTransaction(null);
@@ -849,14 +847,12 @@ export default function Home() {
       }
       
       // Update the chat with transaction error
-      const newMessages = [...messages];
-      newMessages.push({
-        id: Date.now().toString(),
+      setMessages(prev => [...prev, {
+        id: `tx-failure-${Date.now()}`,
         content: `❌ Transaction failed: ${errorMessage}`,
         sender: "bot",
         timestamp: new Date(),
-      });
-      setMessages(newMessages);
+      }]);
       
       setTxStatus('error');
       setPendingTransaction(null);
@@ -927,38 +923,40 @@ export default function Home() {
       setCurrentInterrupt(null);
       setPendingConversationId("");
 
-      // Add a message about the user's decision
+      // Use proper functional updates to prevent race conditions
       const statusMessage = confirmed 
         ? "✅ Operation confirmed, continuing..."
         : "❌ Operation cancelled by user";
       
+      // Add status message first
       setMessages(prev => [...prev, {
-        id: Date.now().toString(),
+        id: `interrupt-status-${Date.now()}`,
         content: statusMessage,
         sender: "bot",
         timestamp: new Date(),
       }]);
 
-      if (result.status === 'resumed') {
-        // If conversation resumed (regardless of confirm/cancel), add the AI response
-        if (result.result && result.result.result && result.result.result.messages) {
-          const messages = result.result.result.messages;
-          const lastMessage = messages[messages.length - 1];
-          if (lastMessage && lastMessage.content) {
-            setMessages(prev => [...prev, {
-              id: Date.now().toString(),
-              content: lastMessage.content,
-              sender: "bot",
-              timestamp: new Date(),
-            }]);
-          }
-        }
+      // Add AI response message
+      if (result.status === 'completed' && result.message) {
+        setMessages(prev => [...prev, {
+          id: `interrupt-resume-${Date.now()}`,
+          content: result.message,
+          sender: "bot",
+          timestamp: new Date(),
+        }]);
+      } else if (result.status === 'cancelled' && result.message) {
+        setMessages(prev => [...prev, {
+          id: `interrupt-cancel-${Date.now()}`,
+          content: result.message,
+          sender: "bot",
+          timestamp: new Date(),
+        }]);
       }
 
     } catch (error) {
       console.error('Error handling interrupt confirmation:', error);
       setMessages(prev => [...prev, {
-        id: Date.now().toString(),
+        id: `interrupt-error-${Date.now()}`,
         content: `❌ Error handling confirmation: ${error}`,
         sender: "bot",
         timestamp: new Date(),
@@ -1210,14 +1208,12 @@ export default function Home() {
                 onClick={() => {
                   setShowSignModal(false);
                   // Add message that transaction was rejected
-                  const newMessages = [...messages];
-                  newMessages.push({
-                    id: Date.now().toString(),
+                  setMessages(prev => [...prev, {
+                    id: `tx-rejected-${Date.now()}`,
                     content: "Transaction rejected by user",
                     sender: "bot",
                     timestamp: new Date(),
-                  });
-                  setMessages(newMessages);
+                  }]);
                 }}
                 className='px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors'
               >

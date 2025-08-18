@@ -8,7 +8,7 @@
 
    ▲ Next.js 15.4.2 (Turbopack)
    - Local:        http://localhost:3000
-   - Network:      http://192.168.86.247:3000
+   - Network:      http://192.168.68.55:3000
    - Environments: .env.local
    - Experiments (use with caution):
      · turbo
@@ -16,218 +16,83 @@
 
  ✓ Starting...
  ⚠ The config property `experimental.turbo` is deprecated. Move this setting to `config.turbopack` as Turbopack is now stable.
- ✓ Ready in 685ms
+ ✓ Ready in 850ms
  ○ Compiling / ...
- ✓ Compiled / in 2.7s
- GET / 200 in 3169ms
- ✓ Compiled /favicon.ico in 125ms
- HEAD / 200 in 83ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 369ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 221ms
- ✓ Compiled /api/chat in 122ms
+ ✓ Compiled / in 3.1s
+ GET / 200 in 3544ms
+ ✓ Compiled /favicon.ico in 119ms
+ HEAD / 200 in 100ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 381ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 222ms
+ ✓ Compiled /api/chat in 142ms
 GOOGLE_KEY_JSON not provided, using application default credentials
 Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
 Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
 Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 3125ms
+ POST /api/chat 200 in 2228ms
 Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
 Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
 Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 5735ms
+ POST /api/chat 200 in 7838ms
 Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":5}
 Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
 Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 7062ms
- GET / 200 in 67ms
- HEAD / 200 in 44ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 243ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 222ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 1986ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 5718ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":5}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 6318ms
- GET / 200 in 70ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 219ms
- HEAD / 200 in 48ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 228ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 1914ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 5890ms
- GET / 200 in 80ms
- HEAD / 200 in 47ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 259ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 219ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 964ms
- GET / 200 in 222ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 222ms
- HEAD / 200 in 56ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 233ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 3013ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 5560ms
- GET / 200 in 71ms
- HEAD / 200 in 47ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 243ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 220ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Backend connection error: TypeError: fetch failed
-    at async POST (app/api/chat/route.ts:64:23)
-  62 |     try {
-  63 |       // Forward the request to the backend server
-> 64 |       const response = await fetch(`${BACKEND_URL}/api/chat`, {
-     |                       ^
-  65 |         method: "POST",
-  66 |         headers,
-  67 |         body: JSON.stringify({ {
-  [cause]: [Error [HeadersTimeoutError]: Headers Timeout Error] {
-    code: 'UND_ERR_HEADERS_TIMEOUT'
-  }
+ POST /api/chat 200 in 4126ms
+ ✓ Compiled /api/interrupt/confirm in 127ms
+Interrupt confirmation request: {
+  interrupt_id: '6a3fc930-b124-46a3-bb7a-d0c8094dfcc5',
+  conversation_id: '77295e3d-81b9-4ff3-817d-1a177bc9a1c1',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
 }
-Returning mock response for local development
- POST /api/chat 200 in 301116ms
- GET / 200 in 66ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 227ms
- HEAD / 200 in 52ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 223ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 3210ms
- GET / 200 in 74ms
- HEAD / 200 in 50ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 240ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 219ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 2206ms
- GET / 200 in 185ms
- HEAD / 200 in 40ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 226ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 216ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 1902ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 6008ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":5}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 1887ms
+Received interrupt confirmation response: {
+  status: 'completed',
+  conversation_id: '77295e3d-81b9-4ff3-817d-1a177bc9a1c1',
+  message: 'There was an error while trying to create the NFT collection, likely due to a temporary resource or service issue. Please try again shortly. If you want, you can also provide optional details such as:\n' +
+    '\n' +
+    '- mint_fee_recipient (address to receive minting fees)\n' +
+    '- contract_uri (collection metadata URI)\n' +
+    '- base_uri (base content URI for NFTs)\n' +
+    '- max_supply (collection supply cap)\n' +
+    '- mint_fee_token (choose token for mint fees)\n' +
+    '- owner (custom owner address)\n' +
+    '\n' +
+    "Let me know if you'd like to try again or provide any of the above options!",
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 5863ms
 Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":7}
 Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
 Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 1678ms
- GET / 200 in 73ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 231ms
- HEAD / 200 in 47ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 219ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 1379ms
- GET / 200 in 82ms
+ POST /api/chat 200 in 9353ms
+ GET / 200 in 79ms
  GET /favicon.ico?favicon.45db1c09.ico 200 in 224ms
- HEAD / 200 in 44ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 218ms
+ HEAD / 200 in 57ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 232ms
 Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
 Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
 Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 940ms
- GET / 200 in 154ms
- HEAD / 200 in 47ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 248ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 216ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 792ms
- GET / 200 in 108ms
- HEAD / 200 in 47ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 235ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 217ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 822ms
- GET / 200 in 146ms
- HEAD / 200 in 42ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 239ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 219ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 3713ms
+ POST /api/chat 200 in 1926ms
 Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
 Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
 Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 3620ms
- GET / 200 in 72ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 240ms
- HEAD / 200 in 43ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 217ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 4693ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 3838ms
- GET / 200 in 62ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 219ms
- HEAD / 200 in 39ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 220ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 2447ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 4312ms
- GET / 200 in 74ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 231ms
- HEAD / 200 in 51ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 219ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 2864ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 3783ms
+ POST /api/chat 200 in 5685ms
 Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":5}
 Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
 Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 4666ms
-Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":7}
-Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
-Streaming response detected, content-type: text/event-stream
- POST /api/chat 200 in 3758ms
+ POST /api/chat 200 in 6645ms
+Interrupt confirmation request: {
+  interrupt_id: '5b9de18f-9aac-4507-89c5-109c3ac18693',
+  conversation_id: 'ad997955-0f7f-4583-ab99-76e1bb7a63dd',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'completed',
+  conversation_id: 'ad997955-0f7f-4583-ab99-76e1bb7a63dd',
+  message: 'I encountered an error while trying to create your SPG NFT contract collection, indicating the service is currently unavailable or closed for new collections. This may be a temporary issue.\n' +
+    '\n' +
+    'Would you like to try again later, adjust any parameters, or proceed with another request? Let me know how you’d like to continue!',
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 5721ms
