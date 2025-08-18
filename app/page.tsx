@@ -12,6 +12,7 @@ import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import { useAccount, useWalletClient } from "wagmi";
 import { parseEther } from 'viem';
+import { getClientConversationId, resetConversation, setClientConversationId } from '@/utils/conversation';
 
 interface Message {
   id: string;
@@ -113,6 +114,17 @@ export default function Home() {
   const [showInterruptModal, setShowInterruptModal] = useState(false);
   const [currentInterrupt, setCurrentInterrupt] = useState<any>(null);
   const [pendingConversationId, setPendingConversationId] = useState<string>("");
+  // Maintain persistent conversation ID for checkpointer continuity
+  const [conversationId, setConversationId] = useState<string>("");
+  // Track interrupts we've already handled to prevent duplicate popups
+  const handledInterruptIdsRef = useRef<Set<string>>(new Set());
+
+  // Initialize conversation ID on mount
+  useEffect(() => {
+    const id = getClientConversationId();
+    setConversationId(id);
+    console.log("Initialized conversation ID:", id);
+  }, []);
 
   // Use Vercel AI SDK for chat
   useEffect(() => {
@@ -136,7 +148,8 @@ export default function Home() {
     api: "/api/chat",
     body: {
       mcp_type: selectedMCPServerId,
-      wallet_address: isConnected ? address : undefined
+      wallet_address: isConnected ? address : undefined,
+      conversation_id: conversationId || undefined
     },
     id: `chat-${selectedMCPServerId}-${address || 'no-wallet'}`,
     streamProtocol: 'text', // Use raw text protocol for compatibility with the backend
@@ -323,20 +336,33 @@ export default function Home() {
         const interruptData = JSON.parse(interruptMatch[1]);
         console.log("Interrupt detected:", interruptData);
         
-        // Store interrupt data and show confirmation modal
+        // Deduplicate: if we've already handled this interrupt_id, do not show again
+        const interruptId: string | undefined = interruptData?.interrupt_id;
+        const cleanedContent = content.replace(/__INTERRUPT_START__[\s\S]+?__INTERRUPT_END__/, '').trim();
+        if (interruptId && handledInterruptIdsRef.current.has(interruptId)) {
+          console.log("Interrupt already handled, skipping modal:", interruptId);
+          return cleanedContent;
+        }
+        if (interruptId) {
+          handledInterruptIdsRef.current.add(interruptId);
+        }
+
+        // Store interrupt data and show confirmation modal (only once per id)
         setCurrentInterrupt(interruptData);
         setShowInterruptModal(true);
         
-        // Always use conversation_id from backend (UUID)
+        // Always use conversation_id from backend (UUID) and persist it
         if (interruptData.conversation_id) {
           setPendingConversationId(interruptData.conversation_id);
-          console.log("Using backend UUID for resume:", interruptData.conversation_id);
+          setConversationId(interruptData.conversation_id);
+          setClientConversationId(interruptData.conversation_id);
+          console.log("Updated persistent conversation ID:", interruptData.conversation_id);
         } else {
           console.error("No conversation_id received from backend in interrupt data!");
         }
         
         // Return cleaned content without interrupt markers
-        return content.replace(/__INTERRUPT_START__[\s\S]+?__INTERRUPT_END__/, '').trim();
+        return cleanedContent;
       } catch (e) {
         console.error("Failed to parse interrupt data:", e);
       }
@@ -646,6 +672,11 @@ export default function Home() {
     if (serverId === selectedMCPServerId) return; // Don't update if same server
     
     setSelectedMCPServerId(serverId);
+    
+    // Reset conversation for new server
+    const newConversationId = resetConversation();
+    setConversationId(newConversationId);
+    console.log("Reset conversation ID for new server:", newConversationId);
     
     // Reset the messages state for the UI
     const welcomeMessage: Message = {

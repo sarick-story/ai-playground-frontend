@@ -104,18 +104,15 @@ export async function POST(req: NextRequest) {
         return Response.json(jsonData);
       }
 
-      // For streaming responses, pass through the original response
-      // But first log some debugging information
+      // For streaming responses, pass through using Vercel AI SDK text protocol headers
+      // This aligns with useChat({ streamProtocol: 'text' }) on the client
       console.log("Streaming response detected, content-type:", contentType);
-      
-      // Simply pass through the raw text stream with the header that enables text protocol
       return new Response(response.body, {
         headers: {
-          "Content-Type": "text/event-stream",
+          "Content-Type": "text/plain; charset=utf-8",
           "Cache-Control": "no-cache",
-          "Connection": "keep-alive",
-          "Transfer-Encoding": "chunked",
-          "x-acme-stream-format": "text",  // Use pure text streaming
+          // Signal to the Vercel AI SDK to use the text streaming parser
+          "x-acme-stream-format": "text",
           "x-vercel-ai-stream-data": "text"
         },
       });
