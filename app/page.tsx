@@ -114,6 +114,7 @@ export default function Home() {
   const [showInterruptModal, setShowInterruptModal] = useState(false);
   const [currentInterrupt, setCurrentInterrupt] = useState<any>(null);
   const [pendingConversationId, setPendingConversationId] = useState<string>("");
+  const [isInterruptProcessing, setIsInterruptProcessing] = useState(false);
   // Maintain persistent conversation ID for checkpointer continuity
   const [conversationId, setConversationId] = useState<string>("");
   // Track interrupts we've already handled to prevent duplicate popups
@@ -893,7 +894,14 @@ export default function Home() {
       return;
     }
 
+    // Prevent multiple simultaneous operations
+    if (isInterruptProcessing) {
+      console.log("Interrupt confirmation already in progress, ignoring");
+      return;
+    }
+
     try {
+      setIsInterruptProcessing(true);
       console.log(`Sending interrupt ${confirmed ? 'confirmation' : 'rejection'}:`, {
         interrupt_id: currentInterrupt.interrupt_id,
         conversation_id: pendingConversationId,
@@ -922,6 +930,7 @@ export default function Home() {
       setShowInterruptModal(false);
       setCurrentInterrupt(null);
       setPendingConversationId("");
+      setIsInterruptProcessing(false);
 
       // Use proper functional updates to prevent race conditions
       const statusMessage = confirmed 
@@ -966,6 +975,7 @@ export default function Home() {
       setShowInterruptModal(false);
       setCurrentInterrupt(null);
       setPendingConversationId("");
+      setIsInterruptProcessing(false);
     }
   };
 
@@ -1305,19 +1315,41 @@ export default function Home() {
             <div className='flex justify-end space-x-4 mt-6'>
               <button
                 onClick={() => handleInterruptConfirmation(false)}
-                className='px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors'
+                disabled={isInterruptProcessing}
+                className={`px-4 py-3 text-white rounded-lg transition-colors ${
+                  isInterruptProcessing 
+                    ? 'bg-gray-600 cursor-not-allowed opacity-60' 
+                    : 'bg-gray-700 hover:bg-gray-600'
+                }`}
               >
-                Cancel Operation
+                {isInterruptProcessing ? (
+                  <div className='flex items-center space-x-2'>
+                    <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                    <span>Processing...</span>
+                  </div>
+                ) : (
+                  'Cancel Operation'
+                )}
               </button>
               <button
                 onClick={() => handleInterruptConfirmation(true)}
+                disabled={isInterruptProcessing}
                 className={`px-4 py-3 text-white rounded-lg transition-colors font-bold ${
-                  currentInterrupt.severity === 'high' || currentInterrupt.severity === 'critical'
-                    ? 'bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700'
-                    : 'bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700'
+                  isInterruptProcessing
+                    ? 'bg-gray-600 cursor-not-allowed opacity-60'
+                    : currentInterrupt.severity === 'high' || currentInterrupt.severity === 'critical'
+                      ? 'bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700'
+                      : 'bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700'
                 }`}
               >
-                Confirm & Execute
+                {isInterruptProcessing ? (
+                  <div className='flex items-center space-x-2'>
+                    <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                    <span>Processing...</span>
+                  </div>
+                ) : (
+                  'Confirm & Execute'
+                )}
               </button>
             </div>
           </div>
