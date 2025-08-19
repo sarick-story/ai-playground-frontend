@@ -937,38 +937,46 @@ export default function Home() {
         ? "✅ Operation confirmed, continuing..."
         : "❌ Operation cancelled by user";
       
-      // Add status message first
-      setMessages(prev => [...prev, {
-        id: `interrupt-status-${Date.now()}`,
+      const statusMessageId = `interrupt-status-${Date.now()}`;
+      
+      // Add status message ONLY to aiMessages - useEffect will handle display automatically
+      setAiMessages(prev => [...prev, {
+        id: statusMessageId,
+        role: "assistant", 
         content: statusMessage,
-        sender: "bot",
-        timestamp: new Date(),
       }]);
 
-      // Add AI response message
+      // Add AI response message ONLY to aiMessages - useEffect will handle display automatically
       if (result.status === 'completed' && result.message) {
-        setMessages(prev => [...prev, {
-          id: `interrupt-resume-${Date.now()}`,
+        const messageId = `interrupt-resume-${Date.now()}`;
+        
+        // Add ONLY to aiMessages state - useEffect will handle UI display and prevent duplicates
+        setAiMessages(prev => [...prev, {
+          id: messageId,
+          role: "assistant",
           content: result.message,
-          sender: "bot",
-          timestamp: new Date(),
         }]);
       } else if (result.status === 'cancelled' && result.message) {
-        setMessages(prev => [...prev, {
-          id: `interrupt-cancel-${Date.now()}`,
+        const messageId = `interrupt-cancel-${Date.now()}`;
+        
+        // Add ONLY to aiMessages state - useEffect will handle UI display and prevent duplicates  
+        setAiMessages(prev => [...prev, {
+          id: messageId,
+          role: "assistant",
           content: result.message,
-          sender: "bot",
-          timestamp: new Date(),
         }]);
       }
 
     } catch (error) {
       console.error('Error handling interrupt confirmation:', error);
-      setMessages(prev => [...prev, {
-        id: `interrupt-error-${Date.now()}`,
-        content: `❌ Error handling confirmation: ${error}`,
-        sender: "bot",
-        timestamp: new Date(),
+      const errorMessageId = `interrupt-error-${Date.now()}`;
+      const errorContent = `❌ Error handling confirmation: ${error}`;
+      
+      // Add error message ONLY to aiMessages - useEffect will handle display automatically
+      setAiMessages(prev => [...prev, {
+        id: errorMessageId,
+        role: "assistant",
+        content: errorContent,
       }]);
       
       // Still close the modal even on error
