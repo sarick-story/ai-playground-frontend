@@ -1251,9 +1251,10 @@ export default function Home() {
 
       {/* Interrupt confirmation modal */}
       {showInterruptModal && currentInterrupt && (
-        <div className='fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-md'>
-          <div className='bg-gray-900 border-2 border-yellow-500 rounded-xl max-w-lg w-full p-6 shadow-2xl'>
-            <div className='flex items-center justify-between mb-4'>
+        <div className='fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-md p-4'>
+          <div className='bg-gray-900 border-2 border-yellow-500 rounded-xl max-w-4xl w-full max-h-[90vh] shadow-2xl flex flex-col'>
+            {/* Fixed Header */}
+            <div className='flex items-center justify-between p-6 border-b border-gray-700 flex-shrink-0'>
               <h3 className='text-xl font-bold text-white'>
                 {currentInterrupt.operation || 'Tool Confirmation'}
               </h3>
@@ -1266,61 +1267,69 @@ export default function Home() {
               </div>
             </div>
             
-            <p className='text-gray-300 mb-4'>{currentInterrupt.message}</p>
-            
-            {/* Tool and operation details */}
-            <div className='bg-black/50 p-4 rounded-lg mb-4 border border-gray-700'>
-              <h4 className='text-sm font-bold text-gray-400 mb-2'>Operation Details</h4>
-              <p className='text-sm text-gray-300 mb-1'>Tool: <span className='text-blue-400'>{currentInterrupt.tool_name}</span></p>
-              <p className='text-sm text-gray-300'>{currentInterrupt.description}</p>
-            </div>
+            {/* Scrollable Content */}
+            <div className='flex-1 overflow-y-auto p-6 space-y-4 modal-scrollable'>
+              <p className='text-gray-300'>{currentInterrupt.message}</p>
+              
+              {/* Tool and operation details */}
+              <div className='bg-black/50 p-4 rounded-lg border border-gray-700'>
+                <h4 className='text-sm font-bold text-gray-400 mb-2'>Operation Details</h4>
+                <p className='text-sm text-gray-300 mb-1'>Tool: <span className='text-blue-400'>{currentInterrupt.tool_name}</span></p>
+                <p className='text-sm text-gray-300 break-words'>{currentInterrupt.description}</p>
+              </div>
 
-            {/* Parameters */}
-            {currentInterrupt.parameters && Object.keys(currentInterrupt.parameters).length > 0 && (
-              <div className='bg-black/50 p-4 rounded-lg mb-4 border border-gray-700'>
-                <h4 className='text-sm font-bold text-gray-400 mb-2'>Parameters</h4>
-                <div className='text-xs font-mono text-gray-300 space-y-1'>
-                  {Object.entries(currentInterrupt.parameters).map(([key, value]) => (
-                    <div key={key}>
-                      <span className='text-orange-400'>{key}:</span>{' '}
-                      <span className='text-green-400'>
-                        {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                      </span>
+              {/* Parameters - with proper overflow handling */}
+              {currentInterrupt.parameters && Object.keys(currentInterrupt.parameters).length > 0 && (
+                <div className='bg-black/50 p-4 rounded-lg border border-gray-700'>
+                  <h4 className='text-sm font-bold text-gray-400 mb-2'>Parameters</h4>
+                  <div className='max-h-64 overflow-auto border border-gray-600 rounded p-2 bg-gray-900/50 parameters-container'>
+                    <div className='text-xs font-mono text-gray-300 space-y-1'>
+                      {Object.entries(currentInterrupt.parameters).map(([key, value]) => (
+                        <div key={key} className='break-all'>
+                          <div className='mb-1'>
+                            <span className='text-orange-400 font-bold'>{key}:</span>
+                          </div>
+                          <div className='text-green-400 pl-2 border-l-2 border-green-500/30 ml-2 whitespace-pre-wrap break-all'>
+                            {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Fee information */}
-            {currentInterrupt.fee_information && (
-              <div className='bg-black/50 p-4 rounded-lg mb-4 border border-yellow-700'>
-                <h4 className='text-sm font-bold text-yellow-400 mb-2'>Fee Information</h4>
-                <div className='text-sm text-gray-300 space-y-1'>
-                  <p>Fee: <span className='text-yellow-400 font-bold'>{currentInterrupt.fee_information.fee_display}</span></p>
-                  {currentInterrupt.fee_information.total_cost && (
-                    <p>Total Cost: <span className='text-yellow-400 font-bold'>{currentInterrupt.fee_information.total_cost}</span></p>
-                  )}
-                  <p className='text-xs text-gray-500'>Token: {currentInterrupt.fee_information.fee_token}</p>
+              {/* Fee information */}
+              {currentInterrupt.fee_information && (
+                <div className='bg-black/50 p-4 rounded-lg border border-yellow-700'>
+                  <h4 className='text-sm font-bold text-yellow-400 mb-2'>Fee Information</h4>
+                  <div className='text-sm text-gray-300 space-y-1'>
+                    <p className='break-words'>Fee: <span className='text-yellow-400 font-bold'>{currentInterrupt.fee_information.fee_display}</span></p>
+                    {currentInterrupt.fee_information.total_cost && (
+                      <p className='break-words'>Total Cost: <span className='text-yellow-400 font-bold'>{currentInterrupt.fee_information.total_cost}</span></p>
+                    )}
+                    <p className='text-xs text-gray-500 break-words'>Token: {currentInterrupt.fee_information.fee_token}</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Blockchain impact */}
-            {currentInterrupt.blockchain_impact && (
-              <div className='bg-black/50 p-4 rounded-lg mb-4 border border-red-700'>
-                <h4 className='text-sm font-bold text-red-400 mb-2'>Blockchain Impact</h4>
-                <div className='text-sm text-gray-300 space-y-1'>
-                  <p>Action: <span className='text-red-400'>{currentInterrupt.blockchain_impact.action}</span></p>
-                  <p>Network: <span className='text-blue-400'>{currentInterrupt.blockchain_impact.network}</span></p>
-                  {currentInterrupt.blockchain_impact.estimated_gas && (
-                    <p>Est. Gas: <span className='text-orange-400'>{currentInterrupt.blockchain_impact.estimated_gas}</span></p>
-                  )}
+              {/* Blockchain impact */}
+              {currentInterrupt.blockchain_impact && (
+                <div className='bg-black/50 p-4 rounded-lg border border-red-700'>
+                  <h4 className='text-sm font-bold text-red-400 mb-2'>Blockchain Impact</h4>
+                  <div className='text-sm text-gray-300 space-y-1'>
+                    <p className='break-words'>Action: <span className='text-red-400'>{currentInterrupt.blockchain_impact.action}</span></p>
+                    <p className='break-words'>Network: <span className='text-blue-400'>{currentInterrupt.blockchain_impact.network}</span></p>
+                    {currentInterrupt.blockchain_impact.estimated_gas && (
+                      <p className='break-words'>Est. Gas: <span className='text-orange-400'>{currentInterrupt.blockchain_impact.estimated_gas}</span></p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
             
-            <div className='flex justify-end space-x-4 mt-6'>
+            {/* Fixed Footer */}
+            <div className='flex justify-end space-x-4 p-6 border-t border-gray-700 flex-shrink-0'>
               <button
                 onClick={() => handleInterruptConfirmation(false)}
                 disabled={isInterruptProcessing}
