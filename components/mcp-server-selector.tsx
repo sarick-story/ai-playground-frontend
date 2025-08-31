@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Check, AlertCircle } from "lucide-react"
+import { Check, AlertCircle, Lock } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useAccount } from "wagmi"
 
 export interface MCPServer {
   id: string
@@ -10,6 +11,7 @@ export interface MCPServer {
   description: string
   available: boolean
   comingSoon?: boolean
+  requiresWallet?: boolean
 }
 
 interface MCPServerSelectorProps {
@@ -22,6 +24,7 @@ export function MCPServerSelector({ servers, selectedServerId, onServerSelect }:
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const { isConnected } = useAccount()
 
   const selectedServer = servers.find((server) => server.id === selectedServerId) || servers[0]
 
@@ -44,6 +47,13 @@ export function MCPServerSelector({ servers, selectedServerId, onServerSelect }:
       document.removeEventListener("mousedown", handleClickOutside)
     }
   }, [isOpen])
+
+  // Check if a server is selectable
+  const isServerSelectable = (server: MCPServer) => {
+    if (!server.available) return false
+    if (server.requiresWallet && !isConnected) return false
+    return true
+  }
 
   return (
     <div className="relative w-full">
@@ -90,41 +100,53 @@ export function MCPServerSelector({ servers, selectedServerId, onServerSelect }:
               <p className="text-xs text-gray-400 mt-1">Choose which MCP server to connect to</p>
             </div>
             <div className="p-2">
-              {servers.map((server) => (
-                <div
-                  key={server.id}
-                  onClick={() => {
-                    if (server.available) {
-                      onServerSelect(server.id)
-                      setIsOpen(false)
-                    }
-                  }}
-                  className={`flex items-start p-3 rounded-lg mb-2 last:mb-0 transition-colors duration-200 ${
-                    server.available
-                      ? "cursor-pointer hover:bg-gray-800/60"
-                      : "opacity-60 cursor-not-allowed bg-gray-900/40"
-                  } ${selectedServerId === server.id ? "bg-gray-800/60 border border-purple-500/50" : ""}`}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center">
-                      <h4 className="text-sm font-medium text-white">{server.name}</h4>
-                      {server.comingSoon && (
-                        <span className="ml-2 px-2 py-0.5 text-xs bg-gray-800 text-gray-400 rounded-full">
-                          Coming Soon
-                        </span>
-                      )}
+              {servers.map((server) => {
+                const selectable = isServerSelectable(server)
+                const isWalletRequired = server.requiresWallet && !isConnected
+                
+                return (
+                  <div
+                    key={server.id}
+                    onClick={() => {
+                      if (selectable) {
+                        onServerSelect(server.id)
+                        setIsOpen(false)
+                      }
+                    }}
+                    className={`flex items-start p-3 rounded-lg mb-2 last:mb-0 transition-colors duration-200 ${
+                      selectable
+                        ? "cursor-pointer hover:bg-gray-800/60"
+                        : "opacity-60 cursor-not-allowed bg-gray-900/40"
+                    } ${selectedServerId === server.id ? "bg-gray-800/60 border border-purple-500/50" : ""}`}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center">
+                        <h4 className="text-sm font-medium text-white">{server.name}</h4>
+                        {server.comingSoon && (
+                          <span className="ml-2 px-2 py-0.5 text-xs bg-gray-800 text-gray-400 rounded-full">
+                            Coming Soon
+                          </span>
+                        )}
+                        {isWalletRequired && (
+                          <span className="ml-2 px-2 py-0.5 text-xs bg-purple-900/50 text-purple-200 rounded-full flex items-center">
+                            <Lock className="h-3 w-3 mr-1" /> Wallet Required
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1">{server.description}</p>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">{server.description}</p>
+                    <div className="ml-4 flex-shrink-0">
+                      {selectedServerId === server.id ? (
+                        <Check className="w-5 h-5 text-purple-500" />
+                      ) : server.comingSoon ? (
+                        <AlertCircle className="w-5 h-5 text-gray-500" />
+                      ) : isWalletRequired ? (
+                        <Lock className="w-5 h-5 text-gray-500" />
+                      ) : null}
+                    </div>
                   </div>
-                  <div className="ml-4 flex-shrink-0">
-                    {selectedServerId === server.id ? (
-                      <Check className="w-5 h-5 text-purple-500" />
-                    ) : server.comingSoon ? (
-                      <AlertCircle className="w-5 h-5 text-gray-500" />
-                    ) : null}
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </motion.div>
         )}

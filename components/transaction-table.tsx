@@ -294,55 +294,18 @@ export function TransactionTable({className = ""}: TransactionTableProps) {
                       )?.value
                     : tx.to.hash
 
-                return (
-                  <tr key={tx.hash || index} className='hover:bg-gray-900/40'>
-                    <td className='px-2 sm:px-4 py-3 text-sm truncate'>
-                      <span
-                        className={`inline-flex items-center justify-center min-w-[60px] px-1.5 sm:px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          tx.method === "approve"
-                            ? "bg-blue-800/60 text-blue-300"
-                            : tx.method === "transfer"
-                            ? "bg-purple-800/60 text-purple-300"
-                            : tx.method === "mint"
-                            ? "bg-green-800/60 text-green-300"
-                            : tx.method === "multicall"
-                            ? "bg-yellow-800/60 text-yellow-300"
-                            : tx.method === "commit"
-                            ? "bg-orange-800/60 text-orange-300"
-                            : "bg-gray-800/60 text-gray-300"
-                        }`}
-                      >
-                        {getMethodDisplay(tx.method)}
-                      </span>
-                    </td>
-                    <td className='px-2 sm:px-4 py-3 text-sm font-mono text-gray-300 truncate'>
-                      <div className='flex space-x-1 items-center'>
-                        {truncateHash(tx.hash, 8)}
-
-                        <CopyIconButton
-                          className='ml-1 size-3'
-                          message={tx.hash}
-                        />
-                        <a
-                          href={`https://www.storyscan.io/tx/${tx.hash}`}
-                          target='_blank'
-                          rel='noopener noreferrer'
-                          className='text-gray-400 hover:text-white flex-shrink-0'
-                        >
-                          <ArrowUpRight className='h-3 w-3' />
-                        </a>
-                      </div>
-                    </td>
-                    <td className='px-2 sm:px-4 py-3 text-sm text-gray-300 truncate'>
-                      <span className='font-medium text-purple-400 whitespace-nowrap'>
-                        {amount === "Unlimited"
-                          ? amount
-                          : formatTokenValue(amount)}{" "}
-                        {tx.to?.name || ""}
-                      </span>
-                      {tx.method === "approve" && recipient && (
-                        <div className='text-xs text-gray-500 mt-1'>
-                          Spender: {truncateHash(recipient, 8)}
+                          <CopyIconButton
+                            className="ml-1 size-3"
+                            message={tx.hash}
+                          />
+                          <a
+                            href={`https://www.storyscan.io/tx/${tx.hash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-gray-400 hover:text-white flex-shrink-0"
+                          >
+                            <ArrowUpRight className="h-3 w-3" />
+                          </a>
                         </div>
                       )}
                     </td>

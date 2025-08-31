@@ -1,6 +1,32 @@
-# MCP Playground
+# AI Playground Frontend
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app) that provides a playground interface for Story MCP.
+This is a sophisticated [Next.js](https://nextjs.org) chat interface that seamlessly integrates with the **specialized multi-agent system** backend, featuring intelligent transaction confirmations, MCP server selection, and enhanced user experience for Story Protocol operations.
+
+## 🎨 Key Features
+
+### **Enhanced Chat Interface**
+- **Persistent Conversations**: Backend-managed chat history with conversation continuity
+- **Simplified Architecture**: Frontend only sends latest user message, backend handles full history
+- **WebGL Background**: Dynamic, animated shader background that responds to mouse movement
+
+### **Smart Transaction Confirmation System**
+- **Interactive Confirmation Modals**: Beautiful, informative popups for transaction approvals
+- **User-Friendly Parameter Display**: Technical blockchain parameters presented in readable format
+- **Real-time Transaction Details**: Clear display of operation type, fees, network impact, and parameters
+- **Sensitive Action Protection**: Confirmation required for every sensitive blockchain operation
+- **Duplicate Prevention**: Intelligent tracking to prevent duplicate confirmation popups
+
+### **MCP Server Selection Interface**
+- **Dynamic Server Switching**: Users can choose between different MCP server types
+- **Visual Status Indicators**: Real-time availability and connection status
+- **Wallet Requirements**: Smart detection of wallet-required servers
+- **Coming Soon Support**: UI for future server implementations
+- **Smooth Animations**: Polished Framer Motion transitions
+
+### **Advanced User Experience**
+- **Wallet Integration**: Full wagmi integration for Web3 wallet connection and signing
+- **Error Boundaries**: Comprehensive error handling and recovery
+
 
 ## Prerequisites
 
@@ -47,11 +73,26 @@ This project uses:
 ## Project Structure
 ```
 ai-playground-frontend/
-├── app/              # Next.js frontend pages
-├── components/       # React components
-├── lib/              # Shared utilities
-├── public/           # Static assets
-└── utils/            # Helper functions
+├── app/
+│   ├── api/
+│   │   └── interrupt/
+│   │       └── confirm/
+│   │           └── route.ts      # Interrupt confirmation API endpoint
+│   ├── page.tsx                  # Main chat interface with confirmation system
+│   └── layout.tsx                # App layout with Web3 providers
+├── components/
+│   ├── mcp-server-selector.tsx   # MCP server selection interface
+│   ├── chat-ui.tsx              # Core chat components
+│   ├── transaction-table.tsx     # Transaction history display
+│   ├── stats-panel.tsx          # Analytics and stats
+│   └── background-canvas.tsx     # WebGL shader background
+├── lib/
+│   └── context/
+│       └── StoryContext.tsx     # Story Protocol context provider
+├── utils/
+│   ├── conversation.ts          # Conversation state management
+│   └── api.ts                   # API utilities
+└── public/                      # Static assets
 ```
 
 ## Learn More

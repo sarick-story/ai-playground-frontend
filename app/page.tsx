@@ -1,18 +1,18 @@
-"use client"
-import {motion} from "framer-motion"
-import React, {useEffect, useRef, useState, useMemo, memo} from "react"
-import {ArrowRight} from "lucide-react"
-import {TransactionTable} from "@/components/transaction-table"
-import {StatsPanel} from "@/components/stats-panel"
-import {useChat} from "@ai-sdk/react"
-import ReactMarkdown, {Components} from "react-markdown"
-import {ToolsPanel} from "@/components/tools-panel"
-import {
-  MCPServerSelector,
-  type MCPServer,
-} from "@/components/mcp-server-selector"
-import remarkGfm from "remark-gfm"
-import remarkBreaks from "remark-breaks"
+"use client";
+import { motion } from "framer-motion";
+import React, { useEffect, useRef, useState, useMemo, memo } from "react";
+import { ArrowRight } from "lucide-react";
+import { TransactionTable } from "@/components/transaction-table";
+import { StatsPanel } from "@/components/stats-panel";
+import { useChat } from "@ai-sdk/react";
+import ReactMarkdown, { Components } from "react-markdown";
+import { ToolsPanel } from "@/components/tools-panel";
+import { MCPServerSelector, type MCPServer } from "@/components/mcp-server-selector";
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
+import { useAccount, useWalletClient } from "wagmi";
+import { parseEther } from 'viem';
+import { getClientConversationId, resetConversation, setClientConversationId } from '@/utils/conversation';
 
 interface Message {
   id: string
@@ -33,8 +33,8 @@ const MCP_SERVERS: MCPServer[] = [
     id: "sdk",
     name: "Story SDK MCP",
     description: "Advanced MCP server with SDK integration capabilities",
-    available: false,
-    comingSoon: true,
+    available: true,
+    requiresWallet: true,
   },
 ]
 
@@ -61,7 +61,25 @@ const MemoizedMarkdown = memo(
 )
 
 // Set display name for React DevTools
-MemoizedMarkdown.displayName = "MemoizedMarkdown"
+MemoizedMarkdown.displayName = "MemoizedMarkdown";
+
+// Create a TimestampDisplay component for client-side only rendering
+const TimestampDisplay = memo(({ timestamp }: { timestamp: Date }) => {
+  const [formattedTime, setFormattedTime] = useState<string>("");
+  
+  useEffect(() => {
+    // Format the timestamp only on the client side
+    setFormattedTime(timestamp.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    }));
+  }, [timestamp]);
+  
+  // Don't render anything until formattedTime is set (client-side only)
+  if (!formattedTime) return null;
+  
+  return <p className="text-xs opacity-70 mt-1">{formattedTime}</p>;
+});
 
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -85,11 +103,41 @@ export default function Home() {
   const [mouseLocation, setMouseLocation] =
     useState<WebGLUniformLocation | null>(null)
   const [resolutionLocation, setResolutionLocation] =
-    useState<WebGLUniformLocation | null>(null)
-  const [selectedMCPServerId, setSelectedMCPServerId] =
-    useState<string>("storyscan")
+    useState<WebGLUniformLocation | null>(null);
+  const [selectedMCPServerId, setSelectedMCPServerId] = useState<string>("storyscan");
+  const { isConnected, address } = useAccount();
+  const { data: walletClient } = useWalletClient();
+  const [pendingTransaction, setPendingTransaction] = useState<any>(null);
+  const [txStatus, setTxStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+  const [showSignModal, setShowSignModal] = useState(false);
+  const [privateKey, setPrivateKey] = useState<string>("");
+  const [showInterruptModal, setShowInterruptModal] = useState(false);
+  const [currentInterrupt, setCurrentInterrupt] = useState<any>(null);
+  const [pendingConversationId, setPendingConversationId] = useState<string>("");
+  const [isInterruptProcessing, setIsInterruptProcessing] = useState(false);
+  // Maintain persistent conversation ID for checkpointer continuity
+  const [conversationId, setConversationId] = useState<string>("");
+  // Track interrupts we've already handled to prevent duplicate popups
+  const handledInterruptIdsRef = useRef<Set<string>>(new Set());
+  // Track which AI message IDs have already been processed to avoid duplicates
+  const processedAiMessageIds = useRef<Set<string>>(new Set());
+
+  // Initialize conversation ID on mount
+  useEffect(() => {
+    const id = getClientConversationId();
+    setConversationId(id);
+    console.log("Initialized conversation ID:", id);
+  }, []);
 
   // Use Vercel AI SDK for chat
+  useEffect(() => {
+    if (address) {
+      console.log("Connected wallet address:", address);
+    } else {
+      console.log("No wallet connected");
+    }
+  }, [address]);
+
   const {
     messages: aiMessages,
     input: aiInput,
@@ -97,21 +145,179 @@ export default function Home() {
     handleSubmit,
     status,
     // isLoading,
+    setMessages: setAiMessages,
+    reload,
   } = useChat({
     api: "/api/chat",
-    streamProtocol: "text",
-    onFinish: message => {
-      console.log("Chat finished:", message)
+    body: {
+      mcp_type: selectedMCPServerId,
+      wallet_address: isConnected ? address : undefined,
+      conversation_id: conversationId || undefined
     },
-    onResponse: response => {
-      console.log("Got response:", response)
-      // Check if the response is ok
+    id: `chat-${selectedMCPServerId}-${address || 'no-wallet'}`,
+    streamProtocol: 'text', // Use raw text protocol for compatibility with the backend
+    onFinish: (message) => {
+      // Only log in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Chat finished with message:", message.content);
+      }
+    },
+    onResponse: async (response) => {
+      // Only log in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Got response from backend");
+      }
+      
+      // Check response content type to determine if it's a transaction or regular response
+      const contentType = response.headers.get('content-type');
+      
+      // Handle JSON responses (transaction intents)
+      if (contentType && contentType.includes('application/json')) {
+        console.log("Received JSON response, processing as transaction");
+        try {
+          const jsonData = await response.clone().json();
+          if (jsonData.is_transaction) {
+            console.log("Transaction detected:", jsonData);
+            
+            // Call transaction endpoint to format the transaction for wagmi
+            fetch("/api/transaction", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                to_address: jsonData.transaction_details.to_address,
+                amount: jsonData.transaction_details.amount,
+                wallet_address: jsonData.transaction_details.wallet_address,
+                ...(privateKey && { private_key: privateKey })
+              }),
+            })
+            .then(response => {
+              if (!response.ok) {
+                return response.text().then(text => {
+                  throw new Error(`Transaction API error: ${response.status} - ${text}`);
+                });
+              }
+              return response.json();
+            })
+            .then(formattedTxData => {
+              // Format for wagmi
+              const wagmiTxData = {
+                transaction: {
+                  to: formattedTxData.transaction.to,
+                  value: parseEther(formattedTxData.transaction.value),
+                  data: formattedTxData.transaction.data || '0x',
+                  gas: formattedTxData.transaction.gas,
+                },
+                message: formattedTxData.message
+              };
+              
+              // Set transaction data and show modal
+              setPendingTransaction(wagmiTxData);
+              setShowSignModal(true);
+              
+              // Add transaction message to chat
+              setMessages(prev => [...prev, {
+                id: `tx-success-${Date.now()}`,
+                content: jsonData.message,
+                sender: "bot",
+                timestamp: new Date(),
+              }]);
+            })
+            .catch(error => {
+              console.error("Error processing transaction:", error);
+              setMessages(prev => [...prev, {
+                id: `tx-error-${Date.now()}`,
+                content: `❌ Error preparing transaction: ${error.message}`,
+                sender: "bot",
+                timestamp: new Date(),
+              }]);
+            });
+            
+            // Prevent the default Vercel AI SDK handling since we're handling this JSON response manually
+            throw new Error("IGNORE_STREAM_RESPONSE");
+          }
+        } catch (error: any) {
+          if (error.message === "IGNORE_STREAM_RESPONSE") {
+            // This is our custom control flow, not an actual error
+            console.log("Skipping stream handling for JSON response");
+          } else {
+            console.error("Error parsing response as JSON:", error);
+          }
+        }
+      }
+      
+      // Non-JSON responses continue with normal stream handling
       if (!response.ok) {
         console.error("Response error:", response.status, response.statusText)
       }
     },
-    onError: error => {
-      console.error("Chat error:", error)
+    onError: (error) => {
+      console.error("Chat error:", error);
+      
+      // Handle special Vercel AI SDK errors that might be from JSON responses
+      if (error.message?.includes("Failed to parse stream")) {
+        console.log("Stream parse error detected - this might be a transaction response");
+        
+        // Make a direct API call to get the JSON data
+        fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: [{role: "user", content: aiInput}],
+            mcp_type: selectedMCPServerId,
+            wallet_address: address
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.is_transaction) {
+            // Process transaction directly
+            fetch("/api/transaction", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                to_address: data.transaction_details.to_address,
+                amount: data.transaction_details.amount,
+                wallet_address: data.transaction_details.wallet_address,
+                ...(privateKey && { private_key: privateKey })
+              }),
+            })
+            .then(response => response.json())
+            .then(txData => {
+              const wagmiTxData = {
+                transaction: {
+                  to: txData.transaction.to,
+                  value: parseEther(txData.transaction.value),
+                  data: txData.transaction.data || '0x',
+                  gas: txData.transaction.gas
+                },
+                message: txData.message
+              };
+              
+              setPendingTransaction(wagmiTxData);
+              setShowSignModal(true);
+              
+              setMessages(prev => [...prev, {
+                id: `tx-error-response-${Date.now()}`,
+                content: data.message,
+                sender: "bot",
+                timestamp: new Date(),
+              }]);
+            })
+            .catch(err => {
+              console.error("Transaction processing error:", err);
+              setMessages(prev => [...prev, {
+                id: `tx-processing-error-${Date.now()}`,
+                content: `❌ Error preparing transaction: ${err.message}`,
+                sender: "bot", 
+                timestamp: new Date(),
+              }]);
+            });
+          }
+        })
+        .catch(err => {
+          console.error("Failed to get direct API data:", err);
+        });
+      }
     },
   })
   const isLoading = status === "submitted"
@@ -125,40 +331,88 @@ export default function Home() {
     handleInputChange(syntheticEvent);
   };
 
-  // Add debugging for aiMessages
-  useEffect(() => {
-    console.log("AI Messages updated:", aiMessages)
-  }, [aiMessages])
+  // Function to detect and handle interrupt messages
+  const detectInterruptMessage = (content: string) => {
+    const interruptMatch = content.match(/__INTERRUPT_START__([\s\S]+?)__INTERRUPT_END__/);
+    if (interruptMatch && interruptMatch[1]) {
+      try {
+        const interruptData = JSON.parse(interruptMatch[1]);
+        console.log("Interrupt detected:", interruptData);
+        
+        // Deduplicate: if we've already handled this interrupt_id, do not show again
+        const interruptId: string | undefined = interruptData?.interrupt_id;
+        const cleanedContent = content.replace(/__INTERRUPT_START__[\s\S]+?__INTERRUPT_END__/, '').trim();
+        if (interruptId && handledInterruptIdsRef.current.has(interruptId)) {
+          console.log("Interrupt already handled, skipping modal:", interruptId);
+          return cleanedContent;
+        }
+        if (interruptId) {
+          handledInterruptIdsRef.current.add(interruptId);
+        }
 
-  // Update our messages state when AI SDK messages change
-  useEffect(() => {
-    if (aiMessages.length > 0) {
-      const newMessages = aiMessages.map(msg => ({
-        id: msg.id,
-        content: msg.content,
-        sender: (msg.role === "user" ? "user" : "bot") as "user" | "bot",
-        timestamp: new Date(),
-      }))
-
-      // Always include the welcome message at the beginning
-      const welcomeMessage: Message = {
-        id: "welcome",
-        content: "Hello! How can I help you today?",
-        sender: "bot",
-        timestamp: new Date(),
-      }
-
-      // Check if there's already a welcome message in the mapped messages
-      const hasWelcomeInNew = newMessages.some(msg => msg.id === "welcome")
-
-      if (!hasWelcomeInNew) {
-        // Add the welcome message at the beginning if it's not already there
-        setMessages([welcomeMessage, ...(newMessages as Message[])])
-      } else {
-        setMessages(newMessages as Message[])
+        // Store interrupt data and show confirmation modal (only once per id)
+        setCurrentInterrupt(interruptData);
+        setShowInterruptModal(true);
+        
+        // Always use conversation_id from backend (UUID) and persist it
+        if (interruptData.conversation_id) {
+          setPendingConversationId(interruptData.conversation_id);
+          setConversationId(interruptData.conversation_id);
+          setClientConversationId(interruptData.conversation_id);
+          console.log("Updated persistent conversation ID:", interruptData.conversation_id);
+        } else {
+          console.error("No conversation_id received from backend in interrupt data!");
+        }
+        
+        // Return cleaned content without interrupt markers
+        return cleanedContent;
+      } catch (e) {
+        console.error("Failed to parse interrupt data:", e);
       }
     }
-  }, [aiMessages])
+    return content;
+  };
+
+  // Incremental AI message processing - only add NEW messages
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log("AI Messages updated", aiMessages);
+      
+      // Log message content for debugging
+      if (aiMessages.length > 0) {
+        const latestMessage = aiMessages[aiMessages.length - 1];
+        console.log("Latest AI message content:", latestMessage.content);
+        
+        // Check for interrupt in the latest message
+        if (latestMessage.content.includes('__INTERRUPT_START__')) {
+          console.log("Interrupt pattern found in message");
+        }
+      }
+    }
+    
+    // Find NEW AI messages that haven't been processed yet
+    const newAiMessages = aiMessages.filter(msg => 
+      !processedAiMessageIds.current.has(msg.id)
+    );
+    
+    if (newAiMessages.length > 0) {
+      // Convert new AI messages to Message format
+      const newMessages = newAiMessages.map(msg => ({
+        id: msg.id,
+        content: detectInterruptMessage(msg.content), // Process interrupts
+        sender: (msg.role === "user" ? "user" : "bot") as "user" | "bot",
+        timestamp: new Date(), // Use actual timestamp when message was added
+      }));
+
+      // Add new messages to the END (preserves chronological order)
+      setMessages(prev => [...prev, ...newMessages]);
+      
+      // Mark these messages as processed
+      newAiMessages.forEach(msg => {
+        processedAiMessageIds.current.add(msg.id);
+      });
+    }
+  }, [aiMessages, selectedMCPServerId, address]);
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -413,10 +667,30 @@ export default function Home() {
 
   // Handle MCP server selection
   const handleMCPServerSelect = (serverId: string) => {
-    setSelectedMCPServerId(serverId)
-    // You could add additional logic here to change API endpoints based on the selected server
-    console.log(`MCP Server changed to: ${serverId}`)
-  }
+    if (serverId === selectedMCPServerId) return; // Don't update if same server
+    
+    setSelectedMCPServerId(serverId);
+    
+    // Reset conversation for new server
+    const newConversationId = resetConversation();
+    setConversationId(newConversationId);
+    console.log("Reset conversation ID for new server:", newConversationId);
+    
+    // Reset the messages state for the UI
+    const welcomeMessage: Message = {
+      id: "welcome",
+      content: "Hello! How can I help you today?",
+      sender: "bot",
+      timestamp: new Date(),
+    };
+    setMessages([welcomeMessage]);
+    
+    // Reset the AI SDK messages
+    setAiMessages([]);
+    
+    // Clear processed message tracking
+    processedAiMessageIds.current.clear();
+  };
 
   // Memoize the markdown components to prevent recreation on each render
   const markdownComponents = useMemo<Components>(
@@ -450,9 +724,292 @@ export default function Home() {
       ),
       // Add specific handling for line breaks
       br: ({...props}) => <br className='my-0' {...props} />,
+      strong: ({...props}) => <strong className="font-bold" {...props} />
     }),
     []
   )
+
+  // Add a useEffect to handle wallet disconnection
+  useEffect(() => {
+    // If wallet disconnected and SDK server is selected, reset to Storyscan
+    if (!isConnected && selectedMCPServerId === "sdk") {
+      setSelectedMCPServerId("storyscan");
+      console.log("Wallet disconnected, reset to Storyscan MCP");
+    }
+  }, [isConnected, selectedMCPServerId]);
+
+  // Process messages to extract transaction requests
+  const processMessage = (message: string) => {
+    try {
+      // Check if the message contains a transaction request
+      if (message.includes('Transaction request:')) {
+        // Extract the JSON transaction request using a more compatible regex
+        // Instead of the /s flag, use [\s\S]* to match across multiple lines
+        const transactionMatch = message.match(/```json\s*([\s\S]*?)\s*```/);
+        if (transactionMatch && transactionMatch[1]) {
+          try {
+            const txRequest = JSON.parse(transactionMatch[1]);
+            console.log("Found transaction request:", txRequest);
+            setPendingTransaction(txRequest);
+            setShowSignModal(true);
+          } catch (e) {
+            console.error("Failed to parse transaction JSON:", e);
+          }
+        } else {
+          console.log("Transaction marker found but couldn't extract JSON");
+        }
+      }
+      return message;
+    } catch (error) {
+      console.error("Error processing message:", error);
+      return message;
+    }
+  };
+
+  // Handler for signing a transaction from the SDK MCP
+  const handleSignTransaction = async () => {
+    if (!pendingTransaction || !walletClient || !address) {
+      console.error("Cannot sign transaction: Missing prerequisites", { 
+        hasPendingTx: !!pendingTransaction,
+        hasWalletClient: !!walletClient,
+        hasAddress: !!address
+      });
+      return;
+    }
+    
+    try {
+      setTxStatus('processing');
+      console.log("Transaction to sign:", pendingTransaction);
+      
+      // Ensure value is a proper hex string
+      let { transaction } = pendingTransaction;
+      
+      // Log the transaction details for debugging
+      const txValue = Number(BigInt(transaction.value)) / 1e18;
+      console.log(`Attempting to send ${txValue} IP to ${transaction.to}`);
+      
+      // Make sure we have all required fields in proper format
+      if (!transaction.to.startsWith('0x')) {
+        transaction.to = '0x' + transaction.to;
+      }
+      
+      // Ensure gas is a hex string
+      if (typeof transaction.gas === 'string' && !transaction.gas.startsWith('0x')) {
+        transaction.gas = '0x' + transaction.gas;
+      } else if (typeof transaction.gas === 'number') {
+        transaction.gas = '0x' + transaction.gas.toString(16);
+      }
+      
+      // Ensure value is a hex string
+      if (typeof transaction.value === 'string' && !transaction.value.startsWith('0x')) {
+        transaction.value = '0x' + transaction.value;
+      } else if (typeof transaction.value === 'number') {
+        transaction.value = '0x' + transaction.value.toString(16);
+      }
+      
+      console.log("Formatted transaction:", transaction);
+      
+      // Create a properly formatted transaction for wagmi
+      const txParams = {
+        to: transaction.to as `0x${string}`,
+        value: BigInt(transaction.value),
+        data: transaction.data as `0x${string}`,
+      };
+      
+      console.log("Sending transaction with params:", txParams);
+      
+      // Sign and send the transaction - do NOT specify chain to use the connected chain
+      const hash = await walletClient.sendTransaction(txParams);
+      
+      console.log("Transaction sent successfully:", hash);
+      
+      // Update the chat with transaction success
+      setMessages(prev => [...prev, {
+        id: `tx-success-${Date.now()}`,
+        content: `✅ Transaction sent successfully! Transaction hash: ${hash}`,
+        sender: "bot",
+        timestamp: new Date(),
+      }]);
+      
+      setTxStatus('success');
+      setPendingTransaction(null);
+      setShowSignModal(false);
+    } catch (error) {
+      console.error("Transaction error:", error);
+      
+      // Extract error message
+      let errorMessage = "Transaction failed";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error && typeof error === 'object') {
+        errorMessage = JSON.stringify(error);
+      }
+      
+      // Update the chat with transaction error
+      setMessages(prev => [...prev, {
+        id: `tx-failure-${Date.now()}`,
+        content: `❌ Transaction failed: ${errorMessage}`,
+        sender: "bot",
+        timestamp: new Date(),
+      }]);
+      
+      setTxStatus('error');
+      setPendingTransaction(null);
+      setShowSignModal(false);
+    }
+  };
+
+  // Update effect to log wallet address changes
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && address) {
+      console.log("Wallet address:", address);
+    }
+  }, [address]);
+
+  // Add debugging for wallet connection and transaction state
+  useEffect(() => {
+    // Only run in development
+    if (process.env.NODE_ENV !== 'development') return;
+    
+    // Log connection status
+    console.log("Wallet connection status:", { 
+      isConnected, 
+      address,
+      hasWalletClient: !!walletClient
+    });
+    
+    // Log transaction state whenever it changes
+    if (pendingTransaction) {
+      console.log("Transaction pending:", pendingTransaction);
+      console.log("Transaction value in ETH:", Number(BigInt(pendingTransaction.transaction.value)) / 1e18);
+    }
+  }, [isConnected, address, walletClient, pendingTransaction]);
+
+  // Handler for interrupt confirmation/rejection
+  const handleInterruptConfirmation = async (confirmed: boolean) => {
+    if (!currentInterrupt || !pendingConversationId) {
+      console.error("No current interrupt to handle");
+      return;
+    }
+
+    // Prevent multiple simultaneous operations
+    if (isInterruptProcessing) {
+      console.log("Interrupt confirmation already in progress, ignoring");
+      return;
+    }
+
+    try {
+      setIsInterruptProcessing(true);
+      console.log(`Sending interrupt ${confirmed ? 'confirmation' : 'rejection'}:`, {
+        interrupt_id: currentInterrupt.interrupt_id,
+        conversation_id: pendingConversationId,
+        confirmed
+      });
+
+      const response = await fetch('/api/interrupt/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          interrupt_id: currentInterrupt.interrupt_id,
+          conversation_id: pendingConversationId,
+          confirmed,
+          wallet_address: address
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Interrupt confirmation failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Interrupt confirmation result:', result);
+
+      // Close the modal
+      setShowInterruptModal(false);
+      setCurrentInterrupt(null);
+      setPendingConversationId("");
+      setIsInterruptProcessing(false);
+
+      // Use proper functional updates to prevent race conditions
+      const statusMessage = confirmed 
+        ? "✅ Operation confirmed, continuing..."
+        : "❌ Operation cancelled by user";
+      
+      const statusMessageId = `interrupt-status-${Date.now()}`;
+      
+      // Add status message ONLY to aiMessages - useEffect will handle display automatically
+      setAiMessages(prev => [...prev, {
+        id: statusMessageId,
+        role: "assistant", 
+        content: statusMessage,
+      }]);
+
+      // Add AI response message ONLY to aiMessages - useEffect will handle display automatically
+      if (result.status === 'completed' && result.message) {
+        const messageId = `interrupt-resume-${Date.now()}`;
+        
+        // Add ONLY to aiMessages state - useEffect will handle UI display and prevent duplicates
+        setAiMessages(prev => [...prev, {
+          id: messageId,
+          role: "assistant",
+          content: result.message,
+        }]);
+      } else if (result.status === 'cancelled' && result.message) {
+        const messageId = `interrupt-cancel-${Date.now()}`;
+        
+        // Add ONLY to aiMessages state - useEffect will handle UI display and prevent duplicates  
+        setAiMessages(prev => [...prev, {
+          id: messageId,
+          role: "assistant",
+          content: result.message,
+        }]);
+      }
+
+    } catch (error) {
+      console.error('Error handling interrupt confirmation:', error);
+      const errorMessageId = `interrupt-error-${Date.now()}`;
+      const errorContent = `❌ Error handling confirmation: ${error}`;
+      
+      // Add error message ONLY to aiMessages - useEffect will handle display automatically
+      setAiMessages(prev => [...prev, {
+        id: errorMessageId,
+        role: "assistant",
+        content: errorContent,
+      }]);
+      
+      // Still close the modal even on error
+      setShowInterruptModal(false);
+      setCurrentInterrupt(null);
+      setPendingConversationId("");
+      setIsInterruptProcessing(false);
+    }
+  };
+
+  // Track when the sign modal becomes visible
+  useEffect(() => {
+    if (showSignModal) {
+      console.log("Transaction sign modal is now VISIBLE");
+      
+      // Force focus on the Sign Transaction button for better visibility
+      const signButton = document.querySelector("[data-sign-tx-button]");
+      if (signButton) {
+        (signButton as HTMLButtonElement).focus();
+      }
+    } else {
+      console.log("Transaction sign modal is now HIDDEN");
+    }
+  }, [showSignModal]);
+
+  // Track when the interrupt modal becomes visible
+  useEffect(() => {
+    if (showInterruptModal) {
+      console.log("Interrupt confirmation modal is now VISIBLE");
+    } else {
+      console.log("Interrupt confirmation modal is now HIDDEN");
+    }
+  }, [showInterruptModal]);
 
   return (
     <>
@@ -495,6 +1052,13 @@ export default function Home() {
                 onServerSelect={handleMCPServerSelect}
               />
             </div>
+
+            {aiMessages.length === 0 && status === "error" && (
+              <div className='p-4 bg-red-100 border border-red-300 rounded-md mb-4 text-red-700'>
+                <p className='font-semibold'>Error connecting to AI service</p>
+                <p className='text-sm'>Please try again or switch to a different MCP.</p>
+              </div>
+            )}
 
             <div
               className='chat-messages p-4 space-y-4 bg-transparent custom-scrollbar flex-grow overflow-y-auto'
@@ -546,9 +1110,9 @@ export default function Home() {
               {isLoading && (
                 <motion.div
                   className='flex justify-start'
-                  initial={{opacity: 0, y: 12}}
-                  animate={{opacity: 1, y: 0}}
-                  transition={{duration: 0.3, opacity: {duration: 0.15}}}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, opacity: { duration: 0.15 } }}
                 >
                   <div className='w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center mr-2 overflow-hidden'>
                     <img
@@ -591,15 +1155,15 @@ export default function Home() {
                           }
                         }
                       }}
-                      placeholder={`Ask about a wallet address, transaction, or blockchain stats using ${
-                        MCP_SERVERS.find(
-                          server => server.id === selectedMCPServerId
-                        )?.name || "MCP"
-                      }...`}
+                      placeholder={
+                        selectedMCPServerId === "storyscan"
+                          ? "Ask about a wallet address, transaction, or blockchain stats using Storyscan MCP..."
+                          : "Ask about Story Protocol or send IP tokens to an address using Story SDK MCP..."
+                      }
                       rows={1}
                       autoComplete="off"
                       data-1p-ignore="true"
-                      className="w-full bg-transparent text-white focus:ring-0 focus:outline-none scrollbar-thin scrollbar-track-gray-900 scrollbar-thumb-gray-800 placeholder-gray-500 resize-none overflow-y-auto min-h-[48px] max-h-[200px]"
+                      className='w-full bg-transparent text-white focus:ring-0 focus:outline-none scrollbar-thin scrollbar-track-gray-900 scrollbar-thumb-gray-800 placeholder-gray-500 resize-none overflow-y-auto min-h-[48px] max-h-[200px]'
                       style={{
                         lineHeight: "1.5",
                       }}
@@ -637,6 +1201,177 @@ export default function Home() {
           </div>
         </footer>
       </main>
+
+      {/* Transaction signing modal - make it more noticeable */}
+      {showSignModal && (
+        <div className='fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-md'>
+          <div className='bg-gray-900 border-2 border-purple-500 rounded-xl max-w-md w-full p-6 shadow-2xl animate-pulse-slow'>
+            <div className='flex items-center justify-between mb-4'>
+              <h3 className='text-xl font-bold text-white'>Transaction Request</h3>
+              <div className='px-2 py-1 bg-yellow-600 text-white text-xs rounded-full animate-pulse'>
+                Action Required
+              </div>
+            </div>
+            
+            <p className='text-gray-300 mb-6 text-lg'>{pendingTransaction.message}</p>
+            
+            <div className='bg-black/50 p-4 rounded-lg mb-6 font-mono text-sm text-gray-300 overflow-x-auto border border-gray-700'>
+              <p className='mb-2'>To: <span className='text-blue-400'>{pendingTransaction.transaction.to}</span></p>
+              <p className='mb-2'>Amount: <span className='text-green-400 font-bold'>{Number(BigInt(pendingTransaction.transaction.value)) / 1e18} IP</span></p>
+              <p>Gas: <span className='text-orange-400'>{parseInt(pendingTransaction.transaction.gas, 16)}</span></p>
+            </div>
+            
+            <div className='flex justify-end space-x-4 mt-6'>
+              <button
+                onClick={() => {
+                  setShowSignModal(false);
+                  // Add message that transaction was rejected
+                  setMessages(prev => [...prev, {
+                    id: `tx-rejected-${Date.now()}`,
+                    content: "Transaction rejected by user",
+                    sender: "bot",
+                    timestamp: new Date(),
+                  }]);
+                }}
+                className='px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors'
+              >
+                Reject Transaction
+              </button>
+              <button
+                onClick={handleSignTransaction}
+                className='px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-colors font-bold'
+                data-sign-tx-button
+              >
+                Sign Transaction
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Interrupt confirmation modal */}
+      {showInterruptModal && currentInterrupt && (
+        <div className='fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-md p-4'>
+          <div className='bg-gray-900 border-2 border-yellow-500 rounded-xl max-w-4xl w-full max-h-[90vh] shadow-2xl flex flex-col'>
+            {/* Fixed Header */}
+            <div className='flex items-center justify-between p-6 border-b border-gray-700 flex-shrink-0'>
+              <h3 className='text-xl font-bold text-white'>
+                {currentInterrupt.operation || 'Tool Confirmation'}
+              </h3>
+              <div className={`px-2 py-1 text-white text-xs rounded-full ${
+                currentInterrupt.severity === 'high' || currentInterrupt.severity === 'critical' 
+                  ? 'bg-red-600' 
+                  : 'bg-orange-600'
+              }`}>
+                {currentInterrupt.severity === 'high' ? 'High Risk' : 'Confirmation Required'}
+              </div>
+            </div>
+            
+            {/* Scrollable Content */}
+            <div className='flex-1 overflow-y-auto p-6 space-y-4 modal-scrollable'>
+              <p className='text-gray-300'>{currentInterrupt.message}</p>
+              
+              {/* Tool and operation details */}
+              <div className='bg-black/50 p-4 rounded-lg border border-gray-700'>
+                <h4 className='text-sm font-bold text-gray-400 mb-2'>Operation Details</h4>
+                <p className='text-sm text-gray-300 mb-1'>Tool: <span className='text-blue-400'>{currentInterrupt.tool_name}</span></p>
+                <p className='text-sm text-gray-300 break-words'>{currentInterrupt.description}</p>
+              </div>
+
+              {/* Parameters - with proper overflow handling */}
+              {currentInterrupt.parameters && Object.keys(currentInterrupt.parameters).length > 0 && (
+                <div className='bg-black/50 p-4 rounded-lg border border-gray-700'>
+                  <h4 className='text-sm font-bold text-gray-400 mb-2'>Parameters</h4>
+                  <div className='max-h-64 overflow-auto border border-gray-600 rounded p-2 bg-gray-900/50 parameters-container'>
+                    <div className='text-xs font-mono text-gray-300 space-y-1'>
+                      {Object.entries(currentInterrupt.parameters).map(([key, value]) => (
+                        <div key={key} className='break-all'>
+                          <div className='mb-1'>
+                            <span className='text-orange-400 font-bold'>{key}:</span>
+                          </div>
+                          <div className='text-green-400 pl-2 border-l-2 border-green-500/30 ml-2 whitespace-pre-wrap break-all'>
+                            {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Fee information */}
+              {currentInterrupt.fee_information && (
+                <div className='bg-black/50 p-4 rounded-lg border border-yellow-700'>
+                  <h4 className='text-sm font-bold text-yellow-400 mb-2'>Fee Information</h4>
+                  <div className='text-sm text-gray-300 space-y-1'>
+                    <p className='break-words'>Fee: <span className='text-yellow-400 font-bold'>{currentInterrupt.fee_information.fee_display}</span></p>
+                    {currentInterrupt.fee_information.total_cost && (
+                      <p className='break-words'>Total Cost: <span className='text-yellow-400 font-bold'>{currentInterrupt.fee_information.total_cost}</span></p>
+                    )}
+                    <p className='text-xs text-gray-500 break-words'>Token: {currentInterrupt.fee_information.fee_token}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Blockchain impact */}
+              {currentInterrupt.blockchain_impact && (
+                <div className='bg-black/50 p-4 rounded-lg border border-red-700'>
+                  <h4 className='text-sm font-bold text-red-400 mb-2'>Blockchain Impact</h4>
+                  <div className='text-sm text-gray-300 space-y-1'>
+                    <p className='break-words'>Action: <span className='text-red-400'>{currentInterrupt.blockchain_impact.action}</span></p>
+                    <p className='break-words'>Network: <span className='text-blue-400'>{currentInterrupt.blockchain_impact.network}</span></p>
+                    {currentInterrupt.blockchain_impact.estimated_gas && (
+                      <p className='break-words'>Est. Gas: <span className='text-orange-400'>{currentInterrupt.blockchain_impact.estimated_gas}</span></p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Fixed Footer */}
+            <div className='flex justify-end space-x-4 p-6 border-t border-gray-700 flex-shrink-0'>
+              <button
+                onClick={() => handleInterruptConfirmation(false)}
+                disabled={isInterruptProcessing}
+                className={`px-4 py-3 text-white rounded-lg transition-colors ${
+                  isInterruptProcessing 
+                    ? 'bg-gray-600 cursor-not-allowed opacity-60' 
+                    : 'bg-gray-700 hover:bg-gray-600'
+                }`}
+              >
+                {isInterruptProcessing ? (
+                  <div className='flex items-center space-x-2'>
+                    <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                    <span>Processing...</span>
+                  </div>
+                ) : (
+                  'Cancel Operation'
+                )}
+              </button>
+              <button
+                onClick={() => handleInterruptConfirmation(true)}
+                disabled={isInterruptProcessing}
+                className={`px-4 py-3 text-white rounded-lg transition-colors font-bold ${
+                  isInterruptProcessing
+                    ? 'bg-gray-600 cursor-not-allowed opacity-60'
+                    : currentInterrupt.severity === 'high' || currentInterrupt.severity === 'critical'
+                      ? 'bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700'
+                      : 'bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700'
+                }`}
+              >
+                {isInterruptProcessing ? (
+                  <div className='flex items-center space-x-2'>
+                    <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                    <span>Processing...</span>
+                  </div>
+                ) : (
+                  'Confirm & Execute'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
@@ -648,11 +1383,11 @@ const LoadingBubble = () => {
         <div className='typing-dot w-2 h-2 bg-gray-500 rounded-full animate-pulse'></div>
         <div
           className='typing-dot w-2 h-2 bg-gray-500 rounded-full animate-pulse'
-          style={{animationDelay: "0.2s"}}
+          style={{ animationDelay: '0.2s' }}
         ></div>
         <div
           className='typing-dot w-2 h-2 bg-gray-500 rounded-full animate-pulse'
-          style={{animationDelay: "0.4s"}}
+          style={{ animationDelay: '0.4s' }}
         ></div>
       </div>
     </div>

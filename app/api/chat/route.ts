@@ -83,15 +83,16 @@ export async function POST(req: NextRequest) {
     }
 
     // Get the request body which should include messages AND conversation_id
-    const { messages, conversation_id } = await req.json();
-
-    // Use different URLs for different environments
-    const backendUrl =
-      process.env.VERCEL_ENV === "production"
-        ? process.env.BACKEND_URL // Cloud Run URL in production
-        : process.env.BACKEND_URL || "http://localhost:8000"; // Local development
-
-    console.log("Forwarding request to backend:", `${backendUrl}/api/chat`);
+    const body = await req.json();
+    const { messages, conversation_id, wallet_address, mcp_type } = body;
+    
+    // Extract the latest user message from the messages array
+    const latestUserMessage = messages?.findLast((msg: any) => msg.role === 'user')?.content || '';
+    
+    // Log what we're processing
+    console.log("Request body:", JSON.stringify({ wallet_address, mcp_type, messagesCount: messages?.length || 0 }));
+    console.log("Processing chat message with wallet:", wallet_address || 'none', "MCP:", mcp_type || 'default');
+    console.log("Latest user message:", latestUserMessage.substring(0, 100) + (latestUserMessage.length > 100 ? '...' : ''));
 
     // Generate headers with error handling
     let headers;
@@ -103,13 +104,15 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      // Forward the request to the backend server
-      const response = await fetch(`${backendUrl}/api/chat`, {
+      // Forward the request to the backend server with single message
+      const response = await fetch(`${BACKEND_URL}/api/chat`, {
         method: "POST",
         headers,
         body: JSON.stringify({
-          messages,
-          conversation_id, // Use the conversation_id from the request
+          message: latestUserMessage,  // Send single message instead of messages array
+          conversation_id,
+          wallet_address,
+          mcp_type
         }),
       });
 
@@ -136,37 +139,33 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // For streaming responses, we need to forward the response as-is
-      if (response.headers.get("content-type")?.includes("text/event-stream")) {
-        // Get the response body as a ReadableStream
-        const body = response.body;
-        if (!body) {
-          throw new Error("No response body from backend");
-        }
-
-        // Return a streaming response
-        return new Response(body, {
-          headers: {
-            "Content-Type": "text/event-stream",
-            "Cache-Control": "no-cache",
-            Connection: "keep-alive",
-            "x-vercel-ai-data-stream":
-              response.headers.get("x-vercel-ai-data-stream") || "v1",
-          },
-        });
+      // Check if the response is JSON (for transactions) or streaming (for chat)
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        // This is a JSON response, not a streaming response
+        console.log("Received JSON response from backend");
+        const jsonData = await response.json();
+        return Response.json(jsonData);
       }
 
-      // For non-streaming responses, return the JSON data
-      const data = await response.json();
-      return new Response(JSON.stringify(data), {
-        headers: { "Content-Type": "application/json" },
+      // For streaming responses, pass through using Vercel AI SDK text protocol headers
+      // This aligns with useChat({ streamProtocol: 'text' }) on the client
+      console.log("Streaming response detected, content-type:", contentType);
+      return new Response(response.body, {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "no-cache",
+          // Signal to the Vercel AI SDK to use the text streaming parser
+          "x-acme-stream-format": "text",
+          "x-vercel-ai-stream-data": "text"
+        },
       });
     } catch (error) {
       console.warn("Backend connection error:", error);
       console.log("Returning mock response for local development");
 
       // Return a mock response for local development
-      const mockResponse = generateMockResponse(messages);
+      const mockResponse = generateMockResponse(messages || []);
       return new Response(JSON.stringify(mockResponse), {
         headers: { "Content-Type": "application/json" },
       });
