@@ -40,7 +40,7 @@ export function StatsPanel({ className = "" }: StatsPanelProps) {
   const fetchStats = async () => {
     try {
       setRefreshing(true);
-      const response = await fetch("https://www.storyscan.xyz/api/v2/stats");
+      const response = await fetch("https://www.storyscan.io/api/v2/stats");
       const data = await response.json();
       setStats(data);
     } catch (error) {
