@@ -373,3 +373,56 @@ footer {
   white-space: pre-wrap;
   line-height: 1.2;
 }
+
+/* Modal and interrupt confirmation styles */
+.modal-scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: #6b7280 #374151;
+}
+
+.modal-scrollable::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-scrollable::-webkit-scrollbar-track {
+  background: #374151;
+  border-radius: 4px;
+}
+
+.modal-scrollable::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 4px;
+}
+
+.modal-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Parameters display in modal */
+.parameters-container {
+  scrollbar-width: thin;
+  scrollbar-color: #4ade80 #1f2937;
+}
+
+.parameters-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.parameters-container::-webkit-scrollbar-track {
+  background: #1f2937;
+  border-radius: 3px;
+}
+
+.parameters-container::-webkit-scrollbar-thumb {
+  background: #4ade80;
+  border-radius: 3px;
+}
+
+.parameters-container::-webkit-scrollbar-thumb:hover {
+  background: #22c55e;
+}
+
+.parameters-container::-webkit-scrollbar-corner {
+  background: #1f2937;
+}

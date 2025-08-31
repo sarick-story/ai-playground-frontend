@@ -12,6 +12,7 @@ import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import { useAccount, useWalletClient } from "wagmi";
 import { parseEther } from 'viem';
+import { getClientConversationId, resetConversation, setClientConversationId } from '@/utils/conversation';
 
 interface Message {
   id: string;
@@ -110,6 +111,23 @@ export default function Home() {
   const [txStatus, setTxStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [showSignModal, setShowSignModal] = useState(false);
   const [privateKey, setPrivateKey] = useState<string>("");
+  const [showInterruptModal, setShowInterruptModal] = useState(false);
+  const [currentInterrupt, setCurrentInterrupt] = useState<any>(null);
+  const [pendingConversationId, setPendingConversationId] = useState<string>("");
+  const [isInterruptProcessing, setIsInterruptProcessing] = useState(false);
+  // Maintain persistent conversation ID for checkpointer continuity
+  const [conversationId, setConversationId] = useState<string>("");
+  // Track interrupts we've already handled to prevent duplicate popups
+  const handledInterruptIdsRef = useRef<Set<string>>(new Set());
+  // Track which AI message IDs have already been processed to avoid duplicates
+  const processedAiMessageIds = useRef<Set<string>>(new Set());
+
+  // Initialize conversation ID on mount
+  useEffect(() => {
+    const id = getClientConversationId();
+    setConversationId(id);
+    console.log("Initialized conversation ID:", id);
+  }, []);
 
   // Use Vercel AI SDK for chat
   useEffect(() => {
@@ -133,7 +151,8 @@ export default function Home() {
     api: "/api/chat",
     body: {
       mcp_type: selectedMCPServerId,
-      wallet_address: isConnected ? address : undefined
+      wallet_address: isConnected ? address : undefined,
+      conversation_id: conversationId || undefined
     },
     id: `chat-${selectedMCPServerId}-${address || 'no-wallet'}`,
     streamProtocol: 'text', // Use raw text protocol for compatibility with the backend
@@ -196,8 +215,8 @@ export default function Home() {
               setShowSignModal(true);
               
               // Add transaction message to chat
-              setMessages([...messages, {
-                id: Date.now().toString(),
+              setMessages(prev => [...prev, {
+                id: `tx-success-${Date.now()}`,
                 content: jsonData.message,
                 sender: "bot",
                 timestamp: new Date(),
@@ -205,8 +224,8 @@ export default function Home() {
             })
             .catch(error => {
               console.error("Error processing transaction:", error);
-              setMessages([...messages, {
-                id: Date.now().toString(),
+              setMessages(prev => [...prev, {
+                id: `tx-error-${Date.now()}`,
                 content: `❌ Error preparing transaction: ${error.message}`,
                 sender: "bot",
                 timestamp: new Date(),
@@ -277,8 +296,8 @@ export default function Home() {
               setPendingTransaction(wagmiTxData);
               setShowSignModal(true);
               
-              setMessages([...messages, {
-                id: Date.now().toString(),
+              setMessages(prev => [...prev, {
+                id: `tx-error-response-${Date.now()}`,
                 content: data.message,
                 sender: "bot",
                 timestamp: new Date(),
@@ -286,8 +305,8 @@ export default function Home() {
             })
             .catch(err => {
               console.error("Transaction processing error:", err);
-              setMessages([...messages, {
-                id: Date.now().toString(),
+              setMessages(prev => [...prev, {
+                id: `tx-processing-error-${Date.now()}`,
                 content: `❌ Error preparing transaction: ${err.message}`,
                 sender: "bot", 
                 timestamp: new Date(),
@@ -312,45 +331,88 @@ export default function Home() {
     handleInputChange(syntheticEvent);
   };
 
-  // Add debugging for aiMessages
+  // Function to detect and handle interrupt messages
+  const detectInterruptMessage = (content: string) => {
+    const interruptMatch = content.match(/__INTERRUPT_START__([\s\S]+?)__INTERRUPT_END__/);
+    if (interruptMatch && interruptMatch[1]) {
+      try {
+        const interruptData = JSON.parse(interruptMatch[1]);
+        console.log("Interrupt detected:", interruptData);
+        
+        // Deduplicate: if we've already handled this interrupt_id, do not show again
+        const interruptId: string | undefined = interruptData?.interrupt_id;
+        const cleanedContent = content.replace(/__INTERRUPT_START__[\s\S]+?__INTERRUPT_END__/, '').trim();
+        if (interruptId && handledInterruptIdsRef.current.has(interruptId)) {
+          console.log("Interrupt already handled, skipping modal:", interruptId);
+          return cleanedContent;
+        }
+        if (interruptId) {
+          handledInterruptIdsRef.current.add(interruptId);
+        }
+
+        // Store interrupt data and show confirmation modal (only once per id)
+        setCurrentInterrupt(interruptData);
+        setShowInterruptModal(true);
+        
+        // Always use conversation_id from backend (UUID) and persist it
+        if (interruptData.conversation_id) {
+          setPendingConversationId(interruptData.conversation_id);
+          setConversationId(interruptData.conversation_id);
+          setClientConversationId(interruptData.conversation_id);
+          console.log("Updated persistent conversation ID:", interruptData.conversation_id);
+        } else {
+          console.error("No conversation_id received from backend in interrupt data!");
+        }
+        
+        // Return cleaned content without interrupt markers
+        return cleanedContent;
+      } catch (e) {
+        console.error("Failed to parse interrupt data:", e);
+      }
+    }
+    return content;
+  };
+
+  // Incremental AI message processing - only add NEW messages
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       console.log("AI Messages updated", aiMessages);
       
       // Log message content for debugging
       if (aiMessages.length > 0) {
-        console.log("Latest AI message content:", aiMessages[aiMessages.length - 1].content);
+        const latestMessage = aiMessages[aiMessages.length - 1];
+        console.log("Latest AI message content:", latestMessage.content);
+        
+        // Check for interrupt in the latest message
+        if (latestMessage.content.includes('__INTERRUPT_START__')) {
+          console.log("Interrupt pattern found in message");
+        }
       }
     }
     
-    // Update our messages state when AI SDK messages change
-    if (aiMessages.length > 0) {
-      const newMessages = aiMessages.map(msg => ({
+    // Find NEW AI messages that haven't been processed yet
+    const newAiMessages = aiMessages.filter(msg => 
+      !processedAiMessageIds.current.has(msg.id)
+    );
+    
+    if (newAiMessages.length > 0) {
+      // Convert new AI messages to Message format
+      const newMessages = newAiMessages.map(msg => ({
         id: msg.id,
-        content: msg.content,
+        content: detectInterruptMessage(msg.content), // Process interrupts
         sender: (msg.role === "user" ? "user" : "bot") as "user" | "bot",
-        timestamp: new Date(),
+        timestamp: new Date(), // Use actual timestamp when message was added
       }));
 
-      // Always include the welcome message at the beginning
-      const welcomeMessage: Message = {
-        id: "welcome",
-        content: "Hello! How can I help you today?",
-        sender: "bot",
-        timestamp: new Date(),
-      };
-
-      // Check if there's already a welcome message in the mapped messages
-      const hasWelcomeInNew = newMessages.some(msg => msg.id === "welcome");
-
-      if (!hasWelcomeInNew) {
-        // Add the welcome message at the beginning if it's not already there
-        setMessages([welcomeMessage, ...(newMessages as Message[])]);
-      } else {
-        setMessages(newMessages as Message[]);
-      }
+      // Add new messages to the END (preserves chronological order)
+      setMessages(prev => [...prev, ...newMessages]);
+      
+      // Mark these messages as processed
+      newAiMessages.forEach(msg => {
+        processedAiMessageIds.current.add(msg.id);
+      });
     }
-  }, [aiMessages]);
+  }, [aiMessages, selectedMCPServerId, address]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -609,6 +671,11 @@ export default function Home() {
     
     setSelectedMCPServerId(serverId);
     
+    // Reset conversation for new server
+    const newConversationId = resetConversation();
+    setConversationId(newConversationId);
+    console.log("Reset conversation ID for new server:", newConversationId);
+    
     // Reset the messages state for the UI
     const welcomeMessage: Message = {
       id: "welcome",
@@ -620,6 +687,9 @@ export default function Home() {
     
     // Reset the AI SDK messages
     setAiMessages([]);
+    
+    // Clear processed message tracking
+    processedAiMessageIds.current.clear();
   };
 
   // Memoize the markdown components to prevent recreation on each render
@@ -754,14 +824,12 @@ export default function Home() {
       console.log("Transaction sent successfully:", hash);
       
       // Update the chat with transaction success
-      const newMessages = [...messages];
-      newMessages.push({
-        id: Date.now().toString(),
+      setMessages(prev => [...prev, {
+        id: `tx-success-${Date.now()}`,
         content: `✅ Transaction sent successfully! Transaction hash: ${hash}`,
         sender: "bot",
         timestamp: new Date(),
-      });
-      setMessages(newMessages);
+      }]);
       
       setTxStatus('success');
       setPendingTransaction(null);
@@ -780,14 +848,12 @@ export default function Home() {
       }
       
       // Update the chat with transaction error
-      const newMessages = [...messages];
-      newMessages.push({
-        id: Date.now().toString(),
+      setMessages(prev => [...prev, {
+        id: `tx-failure-${Date.now()}`,
         content: `❌ Transaction failed: ${errorMessage}`,
         sender: "bot",
         timestamp: new Date(),
-      });
-      setMessages(newMessages);
+      }]);
       
       setTxStatus('error');
       setPendingTransaction(null);
@@ -821,6 +887,106 @@ export default function Home() {
     }
   }, [isConnected, address, walletClient, pendingTransaction]);
 
+  // Handler for interrupt confirmation/rejection
+  const handleInterruptConfirmation = async (confirmed: boolean) => {
+    if (!currentInterrupt || !pendingConversationId) {
+      console.error("No current interrupt to handle");
+      return;
+    }
+
+    // Prevent multiple simultaneous operations
+    if (isInterruptProcessing) {
+      console.log("Interrupt confirmation already in progress, ignoring");
+      return;
+    }
+
+    try {
+      setIsInterruptProcessing(true);
+      console.log(`Sending interrupt ${confirmed ? 'confirmation' : 'rejection'}:`, {
+        interrupt_id: currentInterrupt.interrupt_id,
+        conversation_id: pendingConversationId,
+        confirmed
+      });
+
+      const response = await fetch('/api/interrupt/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          interrupt_id: currentInterrupt.interrupt_id,
+          conversation_id: pendingConversationId,
+          confirmed,
+          wallet_address: address
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Interrupt confirmation failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Interrupt confirmation result:', result);
+
+      // Close the modal
+      setShowInterruptModal(false);
+      setCurrentInterrupt(null);
+      setPendingConversationId("");
+      setIsInterruptProcessing(false);
+
+      // Use proper functional updates to prevent race conditions
+      const statusMessage = confirmed 
+        ? "✅ Operation confirmed, continuing..."
+        : "❌ Operation cancelled by user";
+      
+      const statusMessageId = `interrupt-status-${Date.now()}`;
+      
+      // Add status message ONLY to aiMessages - useEffect will handle display automatically
+      setAiMessages(prev => [...prev, {
+        id: statusMessageId,
+        role: "assistant", 
+        content: statusMessage,
+      }]);
+
+      // Add AI response message ONLY to aiMessages - useEffect will handle display automatically
+      if (result.status === 'completed' && result.message) {
+        const messageId = `interrupt-resume-${Date.now()}`;
+        
+        // Add ONLY to aiMessages state - useEffect will handle UI display and prevent duplicates
+        setAiMessages(prev => [...prev, {
+          id: messageId,
+          role: "assistant",
+          content: result.message,
+        }]);
+      } else if (result.status === 'cancelled' && result.message) {
+        const messageId = `interrupt-cancel-${Date.now()}`;
+        
+        // Add ONLY to aiMessages state - useEffect will handle UI display and prevent duplicates  
+        setAiMessages(prev => [...prev, {
+          id: messageId,
+          role: "assistant",
+          content: result.message,
+        }]);
+      }
+
+    } catch (error) {
+      console.error('Error handling interrupt confirmation:', error);
+      const errorMessageId = `interrupt-error-${Date.now()}`;
+      const errorContent = `❌ Error handling confirmation: ${error}`;
+      
+      // Add error message ONLY to aiMessages - useEffect will handle display automatically
+      setAiMessages(prev => [...prev, {
+        id: errorMessageId,
+        role: "assistant",
+        content: errorContent,
+      }]);
+      
+      // Still close the modal even on error
+      setShowInterruptModal(false);
+      setCurrentInterrupt(null);
+      setPendingConversationId("");
+      setIsInterruptProcessing(false);
+    }
+  };
+
   // Track when the sign modal becomes visible
   useEffect(() => {
     if (showSignModal) {
@@ -835,6 +1001,15 @@ export default function Home() {
       console.log("Transaction sign modal is now HIDDEN");
     }
   }, [showSignModal]);
+
+  // Track when the interrupt modal becomes visible
+  useEffect(() => {
+    if (showInterruptModal) {
+      console.log("Interrupt confirmation modal is now VISIBLE");
+    } else {
+      console.log("Interrupt confirmation modal is now HIDDEN");
+    }
+  }, [showInterruptModal]);
 
   return (
     <>
@@ -1051,14 +1226,12 @@ export default function Home() {
                 onClick={() => {
                   setShowSignModal(false);
                   // Add message that transaction was rejected
-                  const newMessages = [...messages];
-                  newMessages.push({
-                    id: Date.now().toString(),
+                  setMessages(prev => [...prev, {
+                    id: `tx-rejected-${Date.now()}`,
                     content: "Transaction rejected by user",
                     sender: "bot",
                     timestamp: new Date(),
-                  });
-                  setMessages(newMessages);
+                  }]);
                 }}
                 className='px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors'
               >
@@ -1070,6 +1243,130 @@ export default function Home() {
                 data-sign-tx-button
               >
                 Sign Transaction
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Interrupt confirmation modal */}
+      {showInterruptModal && currentInterrupt && (
+        <div className='fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-md p-4'>
+          <div className='bg-gray-900 border-2 border-yellow-500 rounded-xl max-w-4xl w-full max-h-[90vh] shadow-2xl flex flex-col'>
+            {/* Fixed Header */}
+            <div className='flex items-center justify-between p-6 border-b border-gray-700 flex-shrink-0'>
+              <h3 className='text-xl font-bold text-white'>
+                {currentInterrupt.operation || 'Tool Confirmation'}
+              </h3>
+              <div className={`px-2 py-1 text-white text-xs rounded-full ${
+                currentInterrupt.severity === 'high' || currentInterrupt.severity === 'critical' 
+                  ? 'bg-red-600' 
+                  : 'bg-orange-600'
+              }`}>
+                {currentInterrupt.severity === 'high' ? 'High Risk' : 'Confirmation Required'}
+              </div>
+            </div>
+            
+            {/* Scrollable Content */}
+            <div className='flex-1 overflow-y-auto p-6 space-y-4 modal-scrollable'>
+              <p className='text-gray-300'>{currentInterrupt.message}</p>
+              
+              {/* Tool and operation details */}
+              <div className='bg-black/50 p-4 rounded-lg border border-gray-700'>
+                <h4 className='text-sm font-bold text-gray-400 mb-2'>Operation Details</h4>
+                <p className='text-sm text-gray-300 mb-1'>Tool: <span className='text-blue-400'>{currentInterrupt.tool_name}</span></p>
+                <p className='text-sm text-gray-300 break-words'>{currentInterrupt.description}</p>
+              </div>
+
+              {/* Parameters - with proper overflow handling */}
+              {currentInterrupt.parameters && Object.keys(currentInterrupt.parameters).length > 0 && (
+                <div className='bg-black/50 p-4 rounded-lg border border-gray-700'>
+                  <h4 className='text-sm font-bold text-gray-400 mb-2'>Parameters</h4>
+                  <div className='max-h-64 overflow-auto border border-gray-600 rounded p-2 bg-gray-900/50 parameters-container'>
+                    <div className='text-xs font-mono text-gray-300 space-y-1'>
+                      {Object.entries(currentInterrupt.parameters).map(([key, value]) => (
+                        <div key={key} className='break-all'>
+                          <div className='mb-1'>
+                            <span className='text-orange-400 font-bold'>{key}:</span>
+                          </div>
+                          <div className='text-green-400 pl-2 border-l-2 border-green-500/30 ml-2 whitespace-pre-wrap break-all'>
+                            {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Fee information */}
+              {currentInterrupt.fee_information && (
+                <div className='bg-black/50 p-4 rounded-lg border border-yellow-700'>
+                  <h4 className='text-sm font-bold text-yellow-400 mb-2'>Fee Information</h4>
+                  <div className='text-sm text-gray-300 space-y-1'>
+                    <p className='break-words'>Fee: <span className='text-yellow-400 font-bold'>{currentInterrupt.fee_information.fee_display}</span></p>
+                    {currentInterrupt.fee_information.total_cost && (
+                      <p className='break-words'>Total Cost: <span className='text-yellow-400 font-bold'>{currentInterrupt.fee_information.total_cost}</span></p>
+                    )}
+                    <p className='text-xs text-gray-500 break-words'>Token: {currentInterrupt.fee_information.fee_token}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Blockchain impact */}
+              {currentInterrupt.blockchain_impact && (
+                <div className='bg-black/50 p-4 rounded-lg border border-red-700'>
+                  <h4 className='text-sm font-bold text-red-400 mb-2'>Blockchain Impact</h4>
+                  <div className='text-sm text-gray-300 space-y-1'>
+                    <p className='break-words'>Action: <span className='text-red-400'>{currentInterrupt.blockchain_impact.action}</span></p>
+                    <p className='break-words'>Network: <span className='text-blue-400'>{currentInterrupt.blockchain_impact.network}</span></p>
+                    {currentInterrupt.blockchain_impact.estimated_gas && (
+                      <p className='break-words'>Est. Gas: <span className='text-orange-400'>{currentInterrupt.blockchain_impact.estimated_gas}</span></p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Fixed Footer */}
+            <div className='flex justify-end space-x-4 p-6 border-t border-gray-700 flex-shrink-0'>
+              <button
+                onClick={() => handleInterruptConfirmation(false)}
+                disabled={isInterruptProcessing}
+                className={`px-4 py-3 text-white rounded-lg transition-colors ${
+                  isInterruptProcessing 
+                    ? 'bg-gray-600 cursor-not-allowed opacity-60' 
+                    : 'bg-gray-700 hover:bg-gray-600'
+                }`}
+              >
+                {isInterruptProcessing ? (
+                  <div className='flex items-center space-x-2'>
+                    <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                    <span>Processing...</span>
+                  </div>
+                ) : (
+                  'Cancel Operation'
+                )}
+              </button>
+              <button
+                onClick={() => handleInterruptConfirmation(true)}
+                disabled={isInterruptProcessing}
+                className={`px-4 py-3 text-white rounded-lg transition-colors font-bold ${
+                  isInterruptProcessing
+                    ? 'bg-gray-600 cursor-not-allowed opacity-60'
+                    : currentInterrupt.severity === 'high' || currentInterrupt.severity === 'critical'
+                      ? 'bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700'
+                      : 'bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700'
+                }`}
+              >
+                {isInterruptProcessing ? (
+                  <div className='flex items-center space-x-2'>
+                    <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                    <span>Processing...</span>
+                  </div>
+                ) : (
+                  'Confirm & Execute'
+                )}
               </button>
             </div>
           </div>

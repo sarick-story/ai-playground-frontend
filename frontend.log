@@ -1,0 +1,555 @@
+
+> mcp_playground@0.1.0 dev
+> next dev --turbopack
+
+ ⚠ Warning: Found multiple lockfiles. Selecting /Users/zizhuoliu/Desktop/Story/package-lock.json.
+   Consider removing the lockfiles at:
+   * /Users/zizhuoliu/Desktop/Story/ai-playground-frontend/package-lock.json
+
+   ▲ Next.js 15.4.2 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.86.247:3000
+   - Environments: .env.local
+   - Experiments (use with caution):
+     · turbo
+     · optimizePackageImports
+
+ ✓ Starting...
+ ⚠ The config property `experimental.turbo` is deprecated. Move this setting to `config.turbopack` as Turbopack is now stable.
+ ✓ Ready in 840ms
+ ○ Compiling / ...
+ ✓ Compiled / in 2.9s
+ GET / 200 in 3380ms
+ ✓ Compiled /favicon.ico in 159ms
+ HEAD / 200 in 99ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 408ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 218ms
+ ✓ Compiled /api/chat in 243ms
+GOOGLE_KEY_JSON not provided, using application default credentials
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: Hi, can you help me upload this image https://picsum.photos/800/600
+
+Backend connection error: TypeError: fetch failed
+    at async POST (app/api/chat/route.ts:68:23)
+  66 |     try {
+  67 |       // Forward the request to the backend server with single message
+> 68 |       const response = await fetch(`${BACKEND_URL}/api/chat`, {
+     |                       ^
+  69 |         method: "POST",
+  70 |         headers,
+  71 |         body: JSON.stringify({ {
+  [cause]: [AggregateError: ] { code: 'ECONNREFUSED' }
+}
+Returning mock response for local development
+ POST /api/chat 200 in 378ms
+ GET / 200 in 113ms
+ HEAD / 200 in 45ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 242ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 217ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: hi
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 3143ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: help me create ip metadata using the ipfs URI
+
+Demo, Demo description, help me create some attribute...
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 4181ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":5}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: Hi, can you help me upload this image https://picsum.photos/800/600
+
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 3499ms
+ ✓ Compiled /api/interrupt/confirm in 98ms
+Interrupt confirmation request: {
+  interrupt_id: '05372911-7311-4297-8097-cb02923983b0',
+  conversation_id: 'ff1d39c4-2ab7-4b8f-ae5b-c1f7e080ba34',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'completed',
+  conversation_id: 'ff1d39c4-2ab7-4b8f-ae5b-c1f7e080ba34',
+  message: '',
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 19728ms
+ GET / 200 in 91ms
+ HEAD / 200 in 47ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 266ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 251ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: Hi, can you help me upload this image https://picsum.photos/800/600
+
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 2353ms
+Interrupt confirmation request: {
+  interrupt_id: '0a5745b1-2695-4006-81e8-68798f74aec0',
+  conversation_id: 'd5e91872-7341-4258-98ff-b0fdaf055de1',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'completed',
+  conversation_id: 'd5e91872-7341-4258-98ff-b0fdaf055de1',
+  message: 'The image has been successfully uploaded to IPFS. Here is the IPFS URI:\n' +
+    '\n' +
+    'ipfs://QmebeUQ2MZG2LqWQBV41AhUukn6i1L4LKPjSuaj2ebsoo8\n' +
+    '\n' +
+    "You can use this URI for registering IP assets or for any further blockchain operations. If you'd like to register this image as an IP asset or perform other actions, please let me know!",
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 6182ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":5}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: help me create ip metadata using the ipfs URI
+
+Demo, Demo description, help me create some attribute...
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 3335ms
+Interrupt confirmation request: {
+  interrupt_id: '0f2152ba-5ea5-4f33-ae32-432a597c4e23',
+  conversation_id: 'd5e91872-7341-4258-98ff-b0fdaf055de1',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'completed',
+  conversation_id: 'd5e91872-7341-4258-98ff-b0fdaf055de1',
+  message: 'The IP metadata has been successfully created and uploaded to IPFS.\n' +
+    '\n' +
+    '- NFT Metadata URI: ipfs://QmSfj2cKFaQ9QyexpKjFPoB94KGWEg4bRGWYSoFiHrxzYT\n' +
+    '- IP Metadata URI: ipfs://QmXrVTr5UWK4sxerTKLqYkfeCB9Zz1ZJzCAwTNHwCXuChF\n' +
+    '\n' +
+    'Registration metadata for minting:\n' +
+    '```json\n' +
+    '{\n' +
+    '  "ip_metadata_uri": "ipfs://QmXrVTr5UWK4sxerTKLqYkfeCB9Zz1ZJzCAwTNHwCXuChF",\n' +
+    '  "ip_metadata_hash": "0x67e9f154a8c32e1c89a46cb723a38fc80c254aaf43f877f7506aef6c03104129",\n' +
+    '  "nft_metadata_uri": "ipfs://QmSfj2cKFaQ9QyexpKjFPoB94KGWEg4bRGWYSoFiHrxzYT",\n' +
+    '  "nft_metadata_hash": "0xc61648a79ee9ba5c3d09a0b1f0726c6b47c4fe0eb7a3fbbc40a6274c36ebd6e6"\n' +
+    '}\n' +
+    '```\n' +
+    '\n' +
+    'Would you like to proceed with registering or minting this as an IP asset? If so, please provide:\n' +
+    '- Commercial Revenue Share (0-100)\n' +
+    '- Are derivatives allowed? (true/false)\n' +
+    '- Is commercial use allowed? (true/false, defaults to true unless specified)\n' +
+    '- Recipient address (if different from your own)\n' +
+    '- Optional: SPG NFT contract address\n' +
+    '\n' +
+    'Let me know how you’d like to proceed!',
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 11547ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":9}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: help me create spg nft contract collection
+
+Name: Demo, Symbol: Demo, yes, yes, mint fee = 1000
+
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 3241ms
+Interrupt confirmation request: {
+  interrupt_id: 'e4fe4ebc-7893-4b65-8e71-7f446a96ba79',
+  conversation_id: 'd5e91872-7341-4258-98ff-b0fdaf055de1',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'completed',
+  conversation_id: 'd5e91872-7341-4258-98ff-b0fdaf055de1',
+  message: 'The SPG NFT collection has been successfully created:\n' +
+    '\n' +
+    '- Collection Name: Demo\n' +
+    '- Symbol: Demo\n' +
+    '- Public Minting: Enabled\n' +
+    '- Minting Status: Open\n' +
+    '- Mint Fee: 1000 wei (WIP)\n' +
+    '- SPG NFT Contract Address: 0xc459C07278ffe98D2b5C0D668e92B1c16e67E7b5\n' +
+    '- Transaction Hash: 41121b2f3dd1366b5d9bf3aace1566fa93ed4278100358657ea8776e83936ca0\n' +
+    '\n' +
+    'Would you like to proceed with minting your IP asset into this collection or perform another action?',
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 11109ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":13}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: Help me deposit 1 ip to wip
+
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 3528ms
+Interrupt confirmation request: {
+  interrupt_id: 'c25d30fe-f471-4ad2-9319-c6df18c42447',
+  conversation_id: 'd5e91872-7341-4258-98ff-b0fdaf055de1',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'completed',
+  conversation_id: 'd5e91872-7341-4258-98ff-b0fdaf055de1',
+  message: '',
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 5909ms
+ GET / 200 in 107ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 226ms
+ HEAD / 200 in 47ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 218ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: Help me deposit 1 ip to wip
+
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 3417ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: yes
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 1731ms
+Interrupt confirmation request: {
+  interrupt_id: 'abc6f9fd-9ead-45bf-8d78-4cbbabe7e7a6',
+  conversation_id: 'ad86d145-6272-4bb6-b17a-bad3c1600b68',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'completed',
+  conversation_id: 'ad86d145-6272-4bb6-b17a-bad3c1600b68',
+  message: 'Successfully wrapped 1E-18 IP tokens to WIP!Transaction Hash: 8f4ac05438baae3bbab7fcd0ee93200468a1827e6e1a2c7859c9d440bf021fe3\n' +
+    '\n' +
+    "If you need to check this transaction, you can use the chain explorer or let me know if you'd like to perform another operation.",
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 8731ms
+ GET / 200 in 159ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 237ms
+ HEAD / 200 in 66ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 221ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: Help me deposit 1 ip to wip
+
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 3879ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: yes
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 1526ms
+Interrupt confirmation request: {
+  interrupt_id: '03ebbd66-b7b0-4597-b719-a15eab29aa83',
+  conversation_id: '49487243-4d3a-43ed-9494-a58251902cf9',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'completed',
+  conversation_id: '49487243-4d3a-43ed-9494-a58251902cf9',
+  message: '',
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 7748ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 223ms
+ GET / 200 in 96ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 244ms
+ HEAD / 200 in 68ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 265ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: Help me deposit 1 ip to wip
+
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 4228ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":3}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: yes
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 1544ms
+Interrupt confirmation request: {
+  interrupt_id: 'f814281d-45f7-443c-86bf-8c61b366769b',
+  conversation_id: '4b491425-31b3-410e-8c53-de2d47ad79cc',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'completed',
+  conversation_id: '4b491425-31b3-410e-8c53-de2d47ad79cc',
+  message: '1 IP token has been successfully wrapped to WIP.\n' +
+    '\n' +
+    'Transaction details:\n' +
+    '- Transaction Hash: 816c5031908169cfef1a3b1346be5501942e32c5f55c952ecda86087262a694\n' +
+    '\n' +
+    'If you need to verify this transaction, you can use the Story Testnet explorer at https://aeneid.explorer.story.foundation or let me know if you need further actions.',
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 9273ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":7}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: help me create spg nft contract collection
+
+Name: Demo, Symbol: Demo, yes, yes, mint fee = 1000
+
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 2236ms
+Interrupt confirmation request: {
+  interrupt_id: '2f097c0c-8f4c-400a-89ce-eaf2d7a6c9a3',
+  conversation_id: '4b491425-31b3-410e-8c53-de2d47ad79cc',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'completed',
+  conversation_id: '4b491425-31b3-410e-8c53-de2d47ad79cc',
+  message: 'Your SPG NFT collection has been created:\n' +
+    '\n' +
+    '• Collection Name: Demo  \n' +
+    '• Symbol: Demo  \n' +
+    '• Public Minting: Enabled  \n' +
+    '• Minting Status: Open  \n' +
+    '• Mint Fee: 1000 wei (1E-15 IP), paid in WIP  \n' +
+    '• Base URI: Not set (tokens use individual metadata URIs)  \n' +
+    '• Max Supply: Unlimited  \n' +
+    '• Fee Recipient: Your wallet  \n' +
+    '• Collection Owner: Your wallet\n' +
+    '\n' +
+    'Key Details:  \n' +
+    '• SPG NFT Contract Address: 0x63edCFB97004A94c155Ba32267507FC81653F3aD  \n' +
+    '• Transaction Hash: ff1a82f8937ec0d15d3107b0fdfd65fb23b15fff1c8b64d5df5139820d273510  \n' +
+    '• Mint Fee: 1000 wei  \n' +
+    '• Payment Token: 0x1514000000000000000000000000000000000000 (WIP)\n' +
+    '\n' +
+    'You can now proceed to mint NFTs to this collection or manage its settings. Let me know your next step!',
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 19258ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":11}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: Get license terms for id: 1
+
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 9463ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":13}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: Help me mint and register ip with terms
+10, yes, r {
+  "ip_metadata_uri": "ipfs://QmTHMiwosDiwBja7nQ...
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 9497ms
+Interrupt confirmation request: {
+  interrupt_id: 'ba296475-1ce9-4456-ba21-faa1d89bc6e1',
+  conversation_id: '4b491425-31b3-410e-8c53-de2d47ad79cc',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'completed',
+  conversation_id: '4b491425-31b3-410e-8c53-de2d47ad79cc',
+  message: '',
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 19954ms
+ GET / 200 in 130ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 274ms
+ HEAD / 200 in 100ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 264ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: Hi, can you help me upload this image https://picsum.photos/800/600
+
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 4812ms
+Interrupt confirmation request: {
+  interrupt_id: '8ca0b75d-a4f9-4795-83da-5f3f4c834bf7',
+  conversation_id: 'a62d3534-6373-4107-a613-300ba08b8276',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'completed',
+  conversation_id: 'a62d3534-6373-4107-a613-300ba08b8276',
+  message: 'The image at https://picsum.photos/800/600 has been successfully uploaded to IPFS.\n' +
+    '\n' +
+    'IPFS URI: ipfs://QmeWUCSBNe5ic6LNLFwSqTUB2Q8FEzpPXKaUhUFeHiqQLg\n' +
+    '\n' +
+    'You can use this IPFS URI for further Story Protocol operations, such as registering an IP asset or attaching as metadata. Let me know your next step!',
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 9589ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":5}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: help me create ip metadata using the ipfs URI
+
+Demo, Demo description, help me create some attribute...
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 7507ms
+Interrupt confirmation request: {
+  interrupt_id: '1ada9909-85f3-4016-9ae6-5d4d103f96f4',
+  conversation_id: 'a62d3534-6373-4107-a613-300ba08b8276',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'completed',
+  conversation_id: 'a62d3534-6373-4107-a613-300ba08b8276',
+  message: 'The metadata for your demo IP asset has been successfully created and uploaded to IPFS.\n' +
+    '\n' +
+    '- NFT Metadata URI: ipfs://QmRZ1zefWvR66s2SYrL95b7ongMQxhJC3G2EbunKufczK7\n' +
+    '- IP Metadata URI: ipfs://Qmdfb4yrHGEiPsNCxXLUhwmKWBCscRbedtoEbVjWiMf2DH\n' +
+    '\n' +
+    'Registration metadata for minting:\n' +
+    '```\n' +
+    '{\n' +
+    '  "ip_metadata_uri": "ipfs://Qmdfb4yrHGEiPsNCxXLUhwmKWBCscRbedtoEbVjWiMf2DH",\n' +
+    '  "ip_metadata_hash": "0x936e2942a7168790d343a27aa79731a5df0dd4eab0ddc25d183674eb24c8b367",\n' +
+    '  "nft_metadata_uri": "ipfs://QmRZ1zefWvR66s2SYrL95b7ongMQxhJC3G2EbunKufczK7",\n' +
+    '  "nft_metadata_hash": "0x6276704790ecabb8fca845a2afb80accc407a0c76ba997e3b4ac227e80f9d08b"\n' +
+    '}\n' +
+    '```\n' +
+    '\n' +
+    'Would you like to proceed with minting and registering this asset? If yes, please provide details about commercial revenue share, derivatives allowed, and any custom parameters for registration.',
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 9929ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":9}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: help me create spg nft contract collection
+
+Name: Demo, Symbol: Demo, yes, yes, mint fee = 1000
+
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 9758ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":11}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: use default
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 3615ms
+Interrupt confirmation request: {
+  interrupt_id: '6d2c09cf-d091-4fcd-9ce9-1939ad9e6c4f',
+  conversation_id: 'a62d3534-6373-4107-a613-300ba08b8276',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'completed',
+  conversation_id: 'a62d3534-6373-4107-a613-300ba08b8276',
+  message: 'Your SPG NFT collection has been successfully created with the following details:\n' +
+    '\n' +
+    '- Name: Demo\n' +
+    '- Symbol: Demo\n' +
+    '- Public Minting: Enabled\n' +
+    '- Minting Status: Open\n' +
+    '- Mint Fee: 1000 wei (denominated in WIP)\n' +
+    '- Max Supply: Unlimited\n' +
+    '- Mint Fee Recipient: Your wallet (default)\n' +
+    '- Collection Owner: Your wallet (default)\n' +
+    '- SPG NFT Contract Address: 0x3314b203Ce16e95b65F3185c071C9073885520B4\n' +
+    '- Transaction Hash: 26324ccefa7689e3ca032d1d93810dfb81bf3d254e0e9ab3657f9e40d4624353\n' +
+    '\n' +
+    'Would you like to proceed with minting an NFT in this collection using your previously created metadata, or do you want to perform another action?',
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 9587ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":15}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: help me get_spg_nft_contract_minting_fee_and_token for 0x57ad656c517BBec632fB1f298132A4816F014439
+
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 11184ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":17}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: Help me deposit 1 ip to wip
+
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 5319ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":19}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: yes
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 2343ms
+Interrupt confirmation request: {
+  interrupt_id: '972dfb2f-4228-4b0b-91f0-2fee62313559',
+  conversation_id: 'a62d3534-6373-4107-a613-300ba08b8276',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'completed',
+  conversation_id: 'a62d3534-6373-4107-a613-300ba08b8276',
+  message: 'Successfully wrapped 1 IP tokens to WIP!\n' +
+    'Transaction Hash: 359b99d51332a3f5abc2fe6405331bfa21acd42172a770cde987d24f34156c9b\n' +
+    '\n' +
+    'If you would like to take further action with your WIP tokens, such as transferring them or checking your balance, let me know!',
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 9482ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":23}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: Help me mint and register ip with terms
+
+10, yes, registration metadata: use the one we created earl...
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 19587ms
+Interrupt confirmation request: {
+  interrupt_id: '92fbd880-26ae-420b-905f-1ca5066e6cd4',
+  conversation_id: 'a62d3534-6373-4107-a613-300ba08b8276',
+  confirmed: true,
+  wallet_address: '0xeC2E...f2C4'
+}
+Received interrupt confirmation response: {
+  status: 'completed',
+  conversation_id: 'a62d3534-6373-4107-a613-300ba08b8276',
+  message: 'Successfully minted NFT and registered as IP Asset with license terms!\n' +
+    '\n' +
+    'Your Configuration:\n' +
+    '- Commercial Revenue Share: 10%\n' +
+    '- Derivatives Allowed: Yes\n' +
+    '- Commercial Use: Enabled\n' +
+    '- Minting Fee: 10000 WIP (wei)\n' +
+    '- Recipient: Your wallet (default)\n' +
+    '- SPG NFT Contract: 0x3314b203Ce16e95b65F3185c071C9073885520B4\n' +
+    '\n' +
+    'Created Assets:\n' +
+    '- IP Asset ID: 0x4027d63E0A0aD2275436Bb70c9fCe88d45Fda5a1\n' +
+    '- NFT Token ID: 1\n' +
+    '- License Terms IDs: [2070]\n' +
+    '- Transaction Hash: c732a3fc0e637711fd66f3ac0f246864c0df003537996cddc84a0f6b1dcc5293\n' +
+    '\n' +
+    'View your IP Asset: https://aeneid.explorer.story.foundation/ipa/0x4027d63E0A0aD2275436Bb70c9fCe88d45Fda5a1\n' +
+    '\n' +
+    'Let me know if you want to take further actions!',
+  tool_confirmed: true
+}
+ POST /api/interrupt/confirm 200 in 25020ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":27}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: send 1 ip to 0xq
+Received JSON response from backend
+ POST /api/chat 200 in 42ms
+ ✓ Compiled /api/transaction in 121ms
+Transaction request: {
+  to_address: '0x0',
+  amount: '1',
+  wallet_address: '0xeC2E...f2C4',
+  has_private_key: false
+}
+Received transaction response: {
+  transaction: { to: '0x0', value: '1', data: '0x', gas: '0x5208' },
+  message: 'Transaction to send 1 IP to 0x0'
+}
+ POST /api/transaction 200 in 153ms
+ GET / 200 in 94ms
+ HEAD / 200 in 46ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 235ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 224ms
+Request body: {"wallet_address":"0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4","mcp_type":"sdk","messagesCount":1}
+Processing chat message with wallet: 0xeC2E8ae2F6c9BE6C876629198Cc554c17e9Ff2C4 MCP: sdk
+Latest user message: hi
+Streaming response detected, content-type: text/event-stream
+ POST /api/chat 200 in 2751ms

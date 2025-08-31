@@ -78,7 +78,7 @@ export function TransactionTable({ className = "" }: TransactionTableProps) {
 
       // Use query parameters to filter transactions by method and limit results
       const response = await fetch(
-        `https://www.storyscan.xyz/api/v2/transactions?filter=validated&method=approve,transfer,multicall,mint,commit&items_count=${transactionCount}`,
+        `https://www.storyscan.io/api/v2/transactions?filter=validated&method=approve,transfer,multicall,mint,commit&items_count=${transactionCount}`,
         {
           headers: {
             accept: "application/json",
@@ -290,7 +290,7 @@ export function TransactionTable({ className = "" }: TransactionTableProps) {
                             message={tx.hash}
                           />
                           <a
-                            href={`https://www.storyscan.xyz/tx/${tx.hash}`}
+                            href={`https://www.storyscan.io/tx/${tx.hash}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-gray-400 hover:text-white flex-shrink-0"
