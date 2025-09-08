@@ -5,10 +5,14 @@ import { NextRequest } from "next/server";
 import { googleAuth } from "./auth";
 
 // Create a new ratelimiter, that allows 5 requests per 1 minute
-const ratelimit = new Ratelimit({
-  redis: kv,
-  limiter: Ratelimit.slidingWindow(5, "60 s"),
-});
+// Only enable rate limiting if KV is configured
+const ratelimit =
+  process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN
+    ? new Ratelimit({
+        redis: kv,
+        limiter: Ratelimit.slidingWindow(5, "60 s"),
+      })
+    : null;
 
 // Get the backend URL from environment variables or use default
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000";
@@ -29,8 +33,11 @@ async function generateHeaders() {
         ...authHeaders,
       };
     } catch (error) {
-      console.warn("Failed to generate auth headers:", error);
-      // Continue without auth headers
+      console.error("Failed to generate auth headers:", error);
+      // Re-throw the error to handle it properly in the main try-catch
+      throw new Error(
+        `Authentication failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 
@@ -52,47 +59,67 @@ function generateMockResponse(messages: any[]) {
 // This is a proxy endpoint that forwards requests to the backend
 export async function POST(req: NextRequest) {
   try {
-    // Identify the user/IP to rate-limit on.
-    // See: https://github.com/vercel/next.js/discussions/33435
-    const ip =
-      req.headers.get("x-real-ip") ||
-      req.headers.get("x-forwarded-for") ||
-      "fallback_identifier";
+    // Only apply rate limiting if ratelimit is configured
+    if (ratelimit) {
+      // Identify the user/IP to rate-limit on.
+      // See: https://github.com/vercel/next.js/discussions/33435
+      const ip =
+        req.headers.get("x-real-ip") ||
+        req.headers.get("x-forwarded-for") ||
+        "fallback_identifier";
 
-    const { success, limit, remaining, reset } = await ratelimit.limit(ip);
+      const { success, limit, remaining, reset } = await ratelimit.limit(ip);
 
-    const rateLimitHeaders: Record<string, string> = {
-      "X-RateLimit-Limit": limit.toString(),
-      "X-RateLimit-Remaining": remaining.toString(),
-    };
+      const rateLimitHeaders: Record<string, string> = {
+        "X-RateLimit-Limit": limit.toString(),
+        "X-RateLimit-Remaining": remaining.toString(),
+      };
 
-    if (!success) {
-      return new Response(
-        JSON.stringify({
-          message: "Too many requests. You have been rate-limited.",
-          rateLimitState: { success, limit, remaining, reset },
-        }),
-        {
-          status: 429,
-          headers: {
-            "Content-Type": "application/json",
-            ...rateLimitHeaders,
+      if (!success) {
+        return new Response(
+          JSON.stringify({
+            message: "Too many requests. You have been rate-limited.",
+            rateLimitState: { success, limit, remaining, reset },
+          }),
+          {
+            status: 429,
+            headers: {
+              "Content-Type": "application/json",
+              ...rateLimitHeaders,
+            },
           },
-        }
-      );
+        );
+      }
     }
 
     // Get the request body which should include messages AND conversation_id
     const body = await req.json();
     const { messages, conversation_id, wallet_address, mcp_type } = body;
-    
+
     // Extract the latest user message from the messages array
-    const latestUserMessage = messages?.findLast((msg: any) => msg.role === 'user')?.content || '';
-    
+    const latestUserMessage =
+      messages?.findLast((msg: any) => msg.role === "user")?.content || "";
+
     // Log what we're processing
-    console.log("Request body:", JSON.stringify({ wallet_address, mcp_type, messagesCount: messages?.length || 0 }));
-    console.log("Processing chat message with wallet:", wallet_address || 'none', "MCP:", mcp_type || 'default');
-    console.log("Latest user message:", latestUserMessage.substring(0, 100) + (latestUserMessage.length > 100 ? '...' : ''));
+    console.log(
+      "Request body:",
+      JSON.stringify({
+        wallet_address,
+        mcp_type,
+        messagesCount: messages?.length || 0,
+      }),
+    );
+    console.log(
+      "Processing chat message with wallet:",
+      wallet_address || "none",
+      "MCP:",
+      mcp_type || "default",
+    );
+    console.log(
+      "Latest user message:",
+      latestUserMessage.substring(0, 100) +
+        (latestUserMessage.length > 100 ? "..." : ""),
+    );
 
     // Generate headers with error handling
     let headers;
@@ -109,10 +136,10 @@ export async function POST(req: NextRequest) {
         method: "POST",
         headers,
         body: JSON.stringify({
-          message: latestUserMessage,  // Send single message instead of messages array
+          message: latestUserMessage, // Send single message instead of messages array
           conversation_id,
           wallet_address,
-          mcp_type
+          mcp_type,
         }),
       });
 
@@ -126,22 +153,36 @@ export async function POST(req: NextRequest) {
           errorData = { message: "Failed to parse error response" };
         }
 
+        // Add more context for 403 errors
+        if (response.status === 403) {
+          console.error(
+            "403 Forbidden: The service account may be missing the Cloud Run Invoker role.",
+          );
+          console.error(
+            "Service account needs 'roles/run.invoker' permission on the Cloud Run service.",
+          );
+        }
+
         return new Response(
           JSON.stringify({
             error:
               errorData?.message || errorData || "Failed to fetch from backend",
             status: response.status,
+            hint:
+              response.status === 403
+                ? "Check if the service account has Cloud Run Invoker role"
+                : undefined,
           }),
           {
             status: response.status,
             headers: { "Content-Type": "application/json" },
-          }
+          },
         );
       }
 
       // Check if the response is JSON (for transactions) or streaming (for chat)
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
         // This is a JSON response, not a streaming response
         console.log("Received JSON response from backend");
         const jsonData = await response.json();
@@ -157,7 +198,7 @@ export async function POST(req: NextRequest) {
           "Cache-Control": "no-cache",
           // Signal to the Vercel AI SDK to use the text streaming parser
           "x-acme-stream-format": "text",
-          "x-vercel-ai-stream-data": "text"
+          "x-vercel-ai-stream-data": "text",
         },
       });
     } catch (error) {
@@ -177,7 +218,7 @@ export async function POST(req: NextRequest) {
         error: error instanceof Error ? error.message : "Internal server error",
         details: error instanceof Error ? error.stack : undefined,
       }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
 }
