@@ -4,7 +4,7 @@
 **Developer:** Zizhuo (Cosmo) Liu
 * **Role:** AI Engineering Intern at **Story Protocol** (June 2025 – August 2025)
 
-I was responsible for designing and implementing the frontend architecture that bridges the gap between the AI agent workflow and the user interface (confirmation page).
+I designed and implemented the core integration layer bridging the AI agent workflow with the frontend, specifically architecting the transaction confirmation system and user-approval loops.
 
 ### 🛠️ Key Technical Highlights
 * **Interactive Confirmation Modals**: Designed and delivered intuitive popup interfaces for blockchain transaction approvals, ensuring a seamless user experience for security-sensitive operations.
@@ -12,7 +12,6 @@ I was responsible for designing and implementing the frontend architecture that 
 * **Multi-Agent UX**: Developed a dynamic UI capable of handling complex, multi-step workflows coordinated by the 9-agent supervisor system
 * **Web3 Parameter Display**: Engineered user-friendly displays for technical blockchain parameters, translating complex transaction data into readable formats for users.
 
-This is a sophisticated [Next.js](https://nextjs.org) chat interface that seamlessly integrates with the **specialized multi-agent system** backend, featuring intelligent transaction confirmations, MCP server selection, and enhanced user experience for Story Protocol operations.
 
 ## 🎨 Key Features
 
